@@ -1,8 +1,7 @@
 import React from "react";
 import * as S from "@/components/Dashboard/styles";
-import { DatePicker, Button } from "antd";
+import { Button, RangePicker } from "@/components/common/styles";
 import dayjs from "dayjs";
-const { RangePicker } = DatePicker;
 
 export default function FilterBarSection() {
   const dateFormat = "YYYY-MM-DD";

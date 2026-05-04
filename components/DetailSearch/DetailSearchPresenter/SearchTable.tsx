@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button, Input, Select, Tag } from "antd";
+import { Button, Input, Select, Tag } from "@/components/common/styles";
 import {
   PlusOutlined,
   SearchOutlined,
@@ -87,10 +87,10 @@ export default function SearchTable() {
         </S.TitleGroup>
         <S.ActionGroup>
           <Button icon={<PlusOutlined />}>조건 추가</Button>
-          <Button type="primary" icon={<SearchOutlined />}>
+          <Button variant="primary" icon={<SearchOutlined />}>
             조회하기
           </Button>
-          <Button icon={<DownloadOutlined />} danger>
+          <Button icon={<DownloadOutlined />} customColor="danger-red">
             Excel 다운로드
           </Button>
         </S.ActionGroup>

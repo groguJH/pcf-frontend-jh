@@ -2,8 +2,8 @@
 import React from "react";
 import * as S from "@/components/Dashboard/styles";
 import { UploadOutlined } from "@ant-design/icons";
-import type { UploadProps } from "antd";
-import { Button, message, Upload } from "antd";
+import { Button, message, Upload } from "@/components/common/styles";
+import type { UploadProps } from "@/components/common/styles";
 
 export default function DashboardHeader() {
   const props: UploadProps = {
@@ -37,7 +37,7 @@ export default function DashboardHeader() {
         <Upload {...props}>
           <Button icon={<UploadOutlined />}>Excel 가져오기</Button>
         </Upload>
-        <Button>리포트 다운로드</Button>
+        <Button customColor="mainGreen">리포트 다운로드</Button>
       </S.ButtonSection>
     </>
   );
