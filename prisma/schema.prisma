@@ -5,9 +5,69 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  output   = "../app/lib/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+/// 배출원 유형-스코프 매핑 (GHG Scope 정책)
+model EmissionCategory {
+  /// 배출원 유형
+  type       String     @db.VarChar(120)
+  /// Scope 분류 (scope1, scope2, scope3)
+  scope      String     @db.VarChar(16)
+  /// FK
+  activities Activity[]
+
+  @@id([type, scope])
+  @@map("emission_categories")
+}
+
+/// 배출계수 마스터
+model EmissionFactor {
+  /// PK
+  id          Int       @id @default(autoincrement())
+  /// 배출원 유형
+  type        String    @db.VarChar(120)
+  /// 상세 내역
+  description String    @db.VarChar(255)
+  /// 단위
+  unit        String    @db.VarChar(40)
+  /// 배출계수 값
+  factorValue Decimal   @map("factor_value") @db.Decimal(18, 8)
+  /// 유효 시작일
+  validFrom   DateTime  @map("valid_from") @db.Date
+  /// 유효 종료일 (최신 버전은 NULL)
+  validTo     DateTime?  @map("valid_to") @db.Date
+
+  @@unique([type, description, unit, validFrom])
+  @@map("emission_factors")
+}
+
+/// 활동 내역 (계산 시점 배출계수 스냅샷 저장)
+model Activity {
+  /// PK
+  id             Int              @id @default(autoincrement())
+  /// 활동 발생 일자
+  activityDate   DateTime         @map("activity_date") @db.Date
+  /// Scope 분류 (scope1, scope2, scope3)
+  scope          String           @db.VarChar(16)
+  /// 배출원 유형
+  type           String           @db.VarChar(120)
+  /// 상세 내역
+  description    String           @db.VarChar(255)
+  /// 활동량/사용량
+  amount         Decimal          @db.Decimal(18, 6)
+  /// 단위
+  unit           String           @db.VarChar(40)
+  /// 등록 시점 배출계수 스냅샷
+  appliedFactor  Decimal          @map("applied_factor") @db.Decimal(18, 8)
+  /// 총 배출량 (amount * applied_factor)
+  emission       Decimal          @db.Decimal(20, 8)
+  /// FK
+  category       EmissionCategory @relation(fields: [type, scope], references: [type, scope])
+
+  @@map("activities")
 }
