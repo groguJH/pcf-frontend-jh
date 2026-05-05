@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import StyledComponentsRegistry from "@/lib/registry";
+import { SideNavigation } from "@/components/common/SideNavigation/SideNavigation";
 
 export const metadata: Metadata = {
   title: "PCF Carbon Dashboard",
@@ -18,7 +19,10 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         <AntdRegistry>
-          <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+          <StyledComponentsRegistry>
+            <SideNavigation />
+            {children}
+          </StyledComponentsRegistry>
         </AntdRegistry>
       </body>
     </html>

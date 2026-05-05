@@ -10,7 +10,6 @@ export const CardGrid = styled.section`
   align-items: stretch;
   gap: 2rem;
   margin: 1rem 0;
-  background-color: yellow;
 
   @media (max-width: 900px) {
     margin: 0.5rem 0;
@@ -22,8 +21,8 @@ export const CardGrid = styled.section`
 export const SurfaceCard = styled.article`
   flex: 1 1 0%;
   min-width: 0;
-  background-color: white;
-  border: 0.1rem solid #ececec;
+  background-color: var(--color-content-light);
+  border: 0.1rem solid #e0e0e0;
   border-radius: 1.6rem;
   padding: 1rem;
   box-shadow: 0 0.4rem 0.6rem rgba(0, 0, 0, 0.05);
@@ -65,7 +64,7 @@ export const ChartPanel = styled.div`
   width: 100%;
   height: 30rem;
   padding: 2rem;
-  background: #fff;
+  background: var(--color-content-light);
   border-radius: 1.6rem;
 `;
 
@@ -88,6 +87,6 @@ export const ChartSectionLayout = styled.section`
 export const SectionTitle = styled.h3`
   font-size: 1.8rem;
   font-weight: 700;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   color: #1d2129;
 `;

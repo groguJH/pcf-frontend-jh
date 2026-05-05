@@ -28,7 +28,7 @@ export default function DashboardHeader() {
   return (
     <>
       <S.DashboardHeader>
-        <h1>탄소발자국(PCF) 대시보드</h1>
+        <h2>탄소발자국(PCF) 대시보드</h2>
         <p>
           실무자 및 경영자를 위한 제품 탄소발자국 전과정 데이터 시각화 대시보드
         </p>

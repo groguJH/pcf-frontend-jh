@@ -5,11 +5,11 @@ import styled from "styled-components";
 export const PageMain = styled.main`
   width: 100%;
   min-height: 100vh;
-  padding: 5vh 5vw 7vh;
-  background-color: blue;
+  padding: 7vh 5vw 7vh;
+  background-color: var(--color-bg);
 
   @media (max-width: 768px) {
-    padding: 3vh 4vw 5vh;
+    padding: 9vh 4vw 5vh;
   }
 `;
 
@@ -21,7 +21,6 @@ export const PageHeader = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 0 1rem;
-  background-color: red;
 
   @media (max-width: 768px) {
     height: 4rem;
@@ -30,7 +29,7 @@ export const PageHeader = styled.header`
 
 export const SurfaceSection = styled.section`
   width: 100%;
-  background: #ffffff;
+  background-color: var(--color-content-light);
   border-radius: 1.6rem;
   padding: 3.2rem;
   margin-top: 2rem;
@@ -39,10 +38,10 @@ export const SurfaceSection = styled.section`
 
 export const CompactSurfaceSection = styled.section`
   width: 100%;
-  background: #ffffff;
+  background: #f5f5f5;
   border-radius: 0.5rem;
   padding: 0.3cm;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   box-shadow: 0 0.4rem 0.6rem rgba(0, 0, 0, 0.05);
 
   display: flex;
@@ -66,7 +65,6 @@ export const ActionBar = styled.section`
   align-items: stretch;
   gap: 3rem;
   margin: 1rem 0;
-  background-color: green;
 
   @media (max-width: 900px) {
     margin: 0.5rem 0;
