@@ -11,9 +11,7 @@ export type ActivityFilterField =
   | "scope"
   | "activityType"
   | "description"
-  | "facilityName"
-  | "productName"
-  | "supplierName"
+  | "quantity"
   | "emissionFactor"
   | "emissionKgCo2e";
 

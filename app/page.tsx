@@ -4,6 +4,7 @@ import * as S from "@/components/Dashboard/styles";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MonthlyChartSection from "@/components/Dashboard/DashboardPresenter/MonthlyChartSection";
 import SearchTable from "@/components/DetailSearch/DetailSearchPresenter/SearchTable";
+import { message } from "@/components/common/styles";
 import {
   defaultCarbonBaseFilters,
   initialActivityFilterRule,
@@ -28,32 +29,78 @@ function buildBaseQuery(filters: CarbonBaseFilters) {
 
 function appendActivityQuery(
   params: URLSearchParams,
-  rule: ActivityFilterRule,
+  rules: ActivityFilterRule[],
   page: number,
   pageSize: number,
 ) {
   params.set("page", String(page));
   params.set("pageSize", String(pageSize));
-  params.set("rules", JSON.stringify([rule]));
+  params.set("rules", JSON.stringify(rules));
 
   return params;
+}
+
+function normalizeRulesForQuery(rules: ActivityFilterRule[]) {
+  const normalizedRules = rules
+    .filter((rule) => rule.value.trim() !== "")
+    .map((rule, index) => ({
+      ...rule,
+      logicOp: index === 0 ? "AND" : rule.logicOp,
+      value: rule.value.trim(),
+    }));
+
+  return normalizedRules.length > 0
+    ? normalizedRules
+    : [{ ...initialActivityFilterRule }];
+}
+
+type CarbonActivityRow = CarbonActivityPage["rows"][number];
+
+const ACTIVITY_EXPORT_PAGE_SIZE = 5000;
+
+function formatScope(scope: CarbonActivityRow["scope"]) {
+  return scope.replace("scope", "SCOPE ");
+}
+
+function formatExportFileName() {
+  const timestamp = new Date()
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", "-")
+    .replaceAll(":", "");
+
+  return `carbon-activities-${timestamp}.xlsx`;
+}
+
+function toActivityExportRows(rows: CarbonActivityRow[]) {
+  return rows.map((row) => ({
+    일자: row.activityDate,
+    Scope: formatScope(row.scope),
+    "활동 유형": row.activityType,
+    설명: row.description,
+    사용량: row.quantity,
+    단위: row.unit,
+    "적용 계수": row.emissionFactor,
+    "배출량 (kgCO₂e)": row.emissionKgCo2e,
+  }));
 }
 
 export default function HomePage() {
   const [filters, setFilters] = useState<CarbonBaseFilters>(
     defaultCarbonBaseFilters,
   );
-  const [draftRule, setDraftRule] = useState<ActivityFilterRule>(
+  const [draftRules, setDraftRules] = useState<ActivityFilterRule[]>([
     initialActivityFilterRule,
-  );
-  const [appliedRule, setAppliedRule] = useState<ActivityFilterRule>(
+  ]);
+  const [appliedRules, setAppliedRules] = useState<ActivityFilterRule[]>([
     initialActivityFilterRule,
-  );
+  ]);
   const [activities, setActivities] = useState<CarbonActivityPage | null>(null);
   const [summary, setSummary] = useState<CarbonDashboardSummary | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const baseQuery = useMemo(() => buildBaseQuery(filters), [filters]);
 
@@ -90,8 +137,8 @@ export default function HomePage() {
   useEffect(() => {
     const controller = new AbortController();
     const params = appendActivityQuery(
-      new URLSearchParams(baseQuery),
-      appliedRule,
+      new URLSearchParams(),
+      appliedRules,
       page,
       pageSize,
     );
@@ -124,22 +171,91 @@ export default function HomePage() {
     loadActivities();
 
     return () => controller.abort();
-  }, [appliedRule, baseQuery, page, pageSize]);
+  }, [appliedRules, page, pageSize]);
 
   const handleFilterChange = useCallback((nextFilters: CarbonBaseFilters) => {
     setFilters(nextFilters);
-    setPage(1);
   }, []);
 
   const handleSearch = useCallback(() => {
-    setAppliedRule(draftRule);
+    setAppliedRules(normalizeRulesForQuery(draftRules));
     setPage(1);
-  }, [draftRule]);
+  }, [draftRules]);
 
   const handlePageChange = useCallback((nextPage: number, nextSize: number) => {
     setPage(nextPage);
     setPageSize(nextSize);
   }, []);
+
+  const handleDownload = useCallback(async () => {
+    setIsDownloading(true);
+
+    try {
+      const firstParams = appendActivityQuery(
+        new URLSearchParams(),
+        appliedRules,
+        1,
+        ACTIVITY_EXPORT_PAGE_SIZE,
+      );
+      const firstResponse = await fetch(`/api/carbon-activities?${firstParams}`);
+
+      if (!firstResponse.ok) {
+        throw new Error("활동 내역을 다운로드할 수 없습니다.");
+      }
+
+      const firstPage = (await firstResponse.json()) as CarbonActivityPage;
+      const rows = [...firstPage.rows];
+
+      for (
+        let nextPage = 2;
+        nextPage <= firstPage.totalPages;
+        nextPage += 1
+      ) {
+        const params = appendActivityQuery(
+          new URLSearchParams(),
+          appliedRules,
+          nextPage,
+          ACTIVITY_EXPORT_PAGE_SIZE,
+        );
+        const response = await fetch(`/api/carbon-activities?${params}`);
+
+        if (!response.ok) {
+          throw new Error("활동 내역을 다운로드할 수 없습니다.");
+        }
+
+        const activityPage = (await response.json()) as CarbonActivityPage;
+        rows.push(...activityPage.rows);
+      }
+
+      if (rows.length === 0) {
+        message.warning("다운로드할 데이터가 없습니다.");
+        return;
+      }
+
+      const XLSX = await import("xlsx");
+      const worksheet = XLSX.utils.json_to_sheet(toActivityExportRows(rows));
+      worksheet["!cols"] = [
+        { wch: 12 },
+        { wch: 10 },
+        { wch: 14 },
+        { wch: 28 },
+        { wch: 12 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 18 },
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "상세 조건 내역");
+      XLSX.writeFile(workbook, formatExportFileName());
+      message.success(`${rows.length.toLocaleString("ko-KR")}건을 다운로드했습니다.`);
+    } catch (error) {
+      console.error(error);
+      message.error("Excel 다운로드 중 오류가 발생했습니다.");
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [appliedRules]);
 
   return (
     <S.DashboardPageMain>
@@ -153,10 +269,12 @@ export default function HomePage() {
       <SearchTable
         activities={activities}
         loading={isActivitiesLoading}
-        rule={draftRule}
-        onRuleChange={setDraftRule}
+        rules={draftRules}
+        onRulesChange={setDraftRules}
         onSearch={handleSearch}
         onPageChange={handlePageChange}
+        onDownload={handleDownload}
+        downloadLoading={isDownloading}
       />
     </S.DashboardPageMain>
   );

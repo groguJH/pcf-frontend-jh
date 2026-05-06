@@ -29,9 +29,7 @@ const filterFields: ActivityFilterField[] = [
   "scope",
   "activityType",
   "description",
-  "facilityName",
-  "productName",
-  "supplierName",
+  "quantity",
   "emissionFactor",
   "emissionKgCo2e",
 ];
@@ -136,11 +134,24 @@ function filterByBase(rows: CarbonActivity[], filters: CarbonBaseFilters) {
 }
 
 function getFieldValue(row: CarbonActivity, field: ActivityFilterField) {
-  if (field === "supplierName") {
-    return row.supplierName ?? "";
+  return row[field];
+}
+
+function parseRuleNumber(value: string) {
+  return Number(value.replaceAll(",", "").trim());
+}
+
+function normalizeComparableString(
+  value: string,
+  field: ActivityFilterField,
+) {
+  const normalized = value.toLowerCase().trim();
+
+  if (field === "scope") {
+    return normalized.replace(/\s+/g, "");
   }
 
-  return row[field];
+  return normalized;
 }
 
 function evaluateSingleRule(row: CarbonActivity, rule: ActivityFilterRule) {
@@ -150,9 +161,13 @@ function evaluateSingleRule(row: CarbonActivity, rule: ActivityFilterRule) {
 
   const rowValue = getFieldValue(row, rule.field);
 
-  if (rule.field === "emissionFactor" || rule.field === "emissionKgCo2e") {
+  if (
+    rule.field === "quantity" ||
+    rule.field === "emissionFactor" ||
+    rule.field === "emissionKgCo2e"
+  ) {
     const numericRowValue = Number(rowValue);
-    const numericRuleValue = Number(rule.value);
+    const numericRuleValue = parseRuleNumber(rule.value);
 
     if (Number.isNaN(numericRuleValue)) {
       return true;
@@ -173,8 +188,11 @@ function evaluateSingleRule(row: CarbonActivity, rule: ActivityFilterRule) {
     return numericRowValue === numericRuleValue;
   }
 
-  const normalizedRowValue = String(rowValue).toLowerCase();
-  const normalizedRuleValue = rule.value.toLowerCase();
+  const normalizedRowValue = normalizeComparableString(
+    String(rowValue),
+    rule.field,
+  );
+  const normalizedRuleValue = normalizeComparableString(rule.value, rule.field);
 
   if (rule.operator === "contains") {
     return normalizedRowValue.includes(normalizedRuleValue);

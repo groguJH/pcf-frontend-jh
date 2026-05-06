@@ -9,6 +9,19 @@ import {
 export const DetailSearchWrapper = styled(SurfaceSection)`
   padding: 2rem;
   margin-top: 0;
+
+  .ant-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    text-align: left !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `;
 
 export const SearchHeader = styled(SectionHeader)``;
@@ -20,29 +33,51 @@ export const ActionGroup = styled(InlineGroup)`
 `;
 
 export const FilterBar = styled(InlineGroup)`
+  display: flex;
+  flex-direction: column;
   background: #f8f9fa;
   padding: 1.6rem;
   border-radius: 0.8rem;
+  align-items: stretch;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+`;
+
+export const QueryRow = styled.div`
+  display: grid;
+  grid-template-columns: 8rem minmax(12rem, 1fr) 12rem minmax(16rem, 2fr) auto;
   align-items: center;
-  gap: 1.2rem;
-  margin-bottom: 3.2rem;
+  gap: 0.8rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+`;
+
+export const QueryPrefix = styled.div`
+  min-width: 0;
+
+  .ant-select {
+    width: 100%;
+  }
 `;
 
 export const ScopeTag = styled.span<{ $type: string }>`
   padding: 0.4rem 1.2rem;
   border-radius: 2rem;
-  font-size: 1.05rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 
   ${({ $type }) => {
     switch ($type) {
       case "SCOPE 1":
-        return `background: #fff4e6; color: #ff922b;`;
+        return `background: #ff7a00; color: #ffffff;`;
       case "SCOPE 2":
-        return `background: #edf2ff; color: #4c6ef5;`;
+        return `background: #1890ff; color: #ffffff;`;
       case "SCOPE 3":
-        return `background: #f3f0ff; color: #7950f2;`;
+        return `background: #52c41a; color: #ffffff;`;
       default:
         return `background: #f1f3f5; color: #868e96;`;
     }
