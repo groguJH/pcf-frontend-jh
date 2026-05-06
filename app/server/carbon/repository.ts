@@ -73,7 +73,7 @@ const memoryRepository = new InMemoryCarbonActivityRepository();
 const prismaRepository = new PrismaCarbonActivityRepository();
 
 export function getCarbonActivityRepository(): CarbonActivityRepository {
-  if (process.env.DATABASE_URL && process.env.CARBON_REPOSITORY !== "memory") {
+  if (process.env.CARBON_REPOSITORY === "prisma") {
     return prismaRepository;
   }
 

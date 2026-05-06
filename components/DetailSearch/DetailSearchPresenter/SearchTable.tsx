@@ -8,41 +8,61 @@ import {
   DownloadOutlined,
 } from "@ant-design/icons";
 import * as S from "../styles";
+import type {
+  ActivityFilterField,
+  ActivityFilterOperator,
+  ActivityFilterRule,
+  CarbonActivityPage,
+} from "@/app/lib/carbon-api";
 
 const { Option } = Select;
-const dataSource = [
-  {
-    key: "1",
-    date: "2025-01-01",
-    scope: "SCOPE 1",
-    type: "고정연소",
-    description: "공장 보일러 (LNG)",
-    usage: "500 m³",
-    factor: "2.100",
-    emission: "1,050.00",
-  },
-  {
-    key: "2",
-    date: "2025-01-01",
-    scope: "SCOPE 2",
-    type: "전기",
-    description: "한국전력 본사",
-    usage: "110 kWh",
-    factor: "0.456",
-    emission: "50.16",
-  },
-  {
-    key: "3",
-    date: "2025-01-01",
-    scope: "SCOPE 3",
-    type: "원소재",
-    description: "플라스틱 1 (A사)",
-    usage: "230 kg",
-    factor: "2.300",
-    emission: "529.00",
-  },
-  // ... 추가 데이터
+
+type SearchTableProps = {
+  activities: CarbonActivityPage | null;
+  loading?: boolean;
+  rule: ActivityFilterRule;
+  onRuleChange: (rule: ActivityFilterRule) => void;
+  onSearch: () => void;
+  onPageChange: (page: number, pageSize: number) => void;
+};
+
+type TableRow = {
+  key: string;
+  date: string;
+  scope: string;
+  type: string;
+  description: string;
+  usage: string;
+  factor: string;
+  emission: string;
+};
+
+const fieldOptions: { label: string; value: ActivityFilterField }[] = [
+  { label: "설명", value: "description" },
+  { label: "활동 유형", value: "activityType" },
+  { label: "Scope", value: "scope" },
+  { label: "제품명", value: "productName" },
+  { label: "배출량", value: "emissionKgCo2e" },
 ];
+
+const operatorOptions: { label: string; value: ActivityFilterOperator }[] = [
+  { label: "포함", value: "contains" },
+  { label: "일치", value: "=" },
+  { label: "불일치", value: "!=" },
+  { label: "이상", value: ">=" },
+  { label: "이하", value: "<=" },
+];
+
+function formatNumber(value: number, fractionDigits = 3) {
+  return value.toLocaleString("ko-KR", {
+    maximumFractionDigits: fractionDigits,
+    minimumFractionDigits: fractionDigits,
+  });
+}
+
+function formatScope(scope: string) {
+  return scope.replace("scope", "SCOPE ");
+}
 
 const columns = [
   { title: "일자", dataIndex: "date", key: "date" },
@@ -75,7 +95,26 @@ const columns = [
   },
 ];
 
-export default function SearchTable() {
+export default function SearchTable({
+  activities,
+  loading = false,
+  rule,
+  onRuleChange,
+  onSearch,
+  onPageChange,
+}: SearchTableProps) {
+  const dataSource: TableRow[] =
+    activities?.rows.map((row) => ({
+      key: String(row.id),
+      date: row.activityDate,
+      scope: formatScope(row.scope),
+      type: row.activityType,
+      description: row.description,
+      usage: row.amountLabel,
+      factor: formatNumber(row.emissionFactor),
+      emission: formatNumber(row.emissionKgCo2e),
+    })) ?? [];
+
   return (
     <S.DetailSearchWrapper>
       <S.SearchHeader>
@@ -87,7 +126,7 @@ export default function SearchTable() {
         </S.TitleGroup>
         <S.ActionGroup>
           <Button icon={<PlusOutlined />}>조건 추가</Button>
-          <Button variant="primary" icon={<SearchOutlined />}>
+          <Button variant="primary" icon={<SearchOutlined />} onClick={onSearch}>
             조회하기
           </Button>
           <Button icon={<DownloadOutlined />} customColor="danger-red">
@@ -103,26 +142,61 @@ export default function SearchTable() {
         >
           WHERE
         </Tag>
-        <Select defaultValue="desc" style={{ width: "15rem" }}>
-          <Option value="desc">설명</Option>
-          <Option value="type">활동 유형</Option>
+        <Select
+          value={rule.field}
+          style={{ width: "15rem" }}
+          onChange={(field) =>
+            onRuleChange({
+              ...rule,
+              field: field as ActivityFilterField,
+            })
+          }
+        >
+          {fieldOptions.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
         </Select>
-        <Select defaultValue="contain" style={{ width: "12rem" }}>
-          <Option value="contain">포함</Option>
-          <Option value="equal">일치</Option>
+        <Select
+          value={rule.operator}
+          style={{ width: "12rem" }}
+          onChange={(operator) =>
+            onRuleChange({
+              ...rule,
+              operator: operator as ActivityFilterOperator,
+            })
+          }
+        >
+          {operatorOptions.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
         </Select>
         <Input
+          value={rule.value}
           placeholder="값을 입력하세요"
           style={{ flex: 1, height: "3.2rem" }}
+          onChange={(event) =>
+            onRuleChange({
+              ...rule,
+              value: event.target.value,
+            })
+          }
         />
       </S.FilterBar>
 
       <S.StyledTable
         dataSource={dataSource}
         columns={columns}
+        loading={loading}
         pagination={{
-          total: 14,
+          current: activities?.page ?? 1,
+          pageSize: activities?.pageSize ?? 10,
+          total: activities?.totalRows ?? 0,
           showSizeChanger: true,
+          onChange: onPageChange,
           itemRender: (page, type, originalElement) => {
             if (type === "prev") return <a>이전</a>;
             if (type === "next") return <a>다음</a>;

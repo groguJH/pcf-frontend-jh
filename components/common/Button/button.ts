@@ -29,7 +29,7 @@ export interface CustomButtonProps extends Omit<
 }
 
 type StyledButtonProps = ButtonProps & {
-  customColor?: CustomColor;
+  $customColor?: CustomColor;
 };
 
 export function Button({
@@ -45,7 +45,7 @@ export function Button({
 
   return React.createElement(
     CustomButton,
-    { ...rest, ...variantProps, customColor: customColor },
+    { ...rest, ...variantProps, $customColor: customColor },
     children,
   );
 }
@@ -57,10 +57,10 @@ export const CustomButton = styled(AntdButton)<StyledButtonProps>`
   justify-content: center;
 
   && {
-    background-color: ${({ customColor = "mainBlue" }) =>
-      BUTTON_COLOR_MAP[customColor]} !important;
-    border-color: ${({ customColor = "mainBlue" }) =>
-      BUTTON_COLOR_MAP[customColor]} !important;
+    background-color: ${({ $customColor = "mainBlue" }) =>
+      BUTTON_COLOR_MAP[$customColor]} !important;
+    border-color: ${({ $customColor = "mainBlue" }) =>
+      BUTTON_COLOR_MAP[$customColor]} !important;
     color: white !important;
 
     &:hover {

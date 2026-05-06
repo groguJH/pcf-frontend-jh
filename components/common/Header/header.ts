@@ -56,6 +56,7 @@ export const LogoWrapper = styled.div`
 
   img {
     width: 70%;
+    height: auto;
     min-height: 2rem;
     object-fit: contain;
   }
