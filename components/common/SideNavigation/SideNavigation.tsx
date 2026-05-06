@@ -27,6 +27,7 @@ const navigationItems = [
     href: "/admin",
     children: [
       { label: "배출원 카테고리", href: "/admin/emission-categories" },
+      { label: "배출계수 관리", href: "/admin/emission-factors" },
     ],
   },
 ];
