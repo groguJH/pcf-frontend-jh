@@ -12,7 +12,24 @@ import {
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoClose } from "react-icons/io5";
 
-import { NavItem, Overlay, SideNav } from "../Sidebar/sidebar";
+import {
+  NavItem,
+  Overlay,
+  SideNav,
+  SubNavItem,
+  SubNavList,
+} from "../Sidebar/sidebar";
+
+const navigationItems = [
+  { label: "대쉬보드", href: "/" },
+  {
+    label: "관리자",
+    href: "/admin",
+    children: [
+      { label: "배출원 카테고리", href: "/admin/emission-categories" },
+    ],
+  },
+];
 
 export function SideNavigation(): JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -48,12 +65,22 @@ export function SideNavigation(): JSX.Element {
           <IoClose />
         </CloseButton>
 
-        <Link href="/about" onClick={closeMenu}>
-          <NavItem>About</NavItem>
-        </Link>
-        <Link href="/contact" onClick={closeMenu}>
-          <NavItem>Contact</NavItem>
-        </Link>
+        {navigationItems.map((item) => (
+          <React.Fragment key={item.href}>
+            <Link href={item.href} onClick={closeMenu}>
+              <NavItem>{item.label}</NavItem>
+            </Link>
+            {item.children ? (
+              <SubNavList>
+                {item.children.map((child) => (
+                  <Link key={child.href} href={child.href} onClick={closeMenu}>
+                    <SubNavItem>{child.label}</SubNavItem>
+                  </Link>
+                ))}
+              </SubNavList>
+            ) : null}
+          </React.Fragment>
+        ))}
       </SideNav>
     </>
   );

@@ -16,17 +16,40 @@ export const SideNav = styled.nav<{ $isOpen: boolean }>`
     $isOpen ? "translateX(0)" : "translateX(-100%)"};
   transition: transform 0.3s ease-in-out;
   box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.1);
-  padding: 2.9vh 5vw;
+  padding: clamp(1.6rem, 2.9vh, 2.4rem) 2rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
 `;
 
 export const NavItem = styled.div`
+  width: 100%;
   font-size: 1.8rem;
   font-weight: 600;
   cursor: pointer;
   color: #333;
+  white-space: nowrap;
+
+  &:hover {
+    color: #0070f3;
+  }
+`;
+
+export const SubNavList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding-left: 1.2rem;
+  margin-top: -1rem;
+`;
+
+export const SubNavItem = styled.div`
+  width: 100%;
+  font-size: 1.4rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #666666;
+  white-space: nowrap;
 
   &:hover {
     color: #0070f3;
