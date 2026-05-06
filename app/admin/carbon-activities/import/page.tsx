@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   CheckCircleOutlined,
   CloudUploadOutlined,
+  DeleteOutlined,
   FileExcelOutlined,
+  PlusOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
+import { Popconfirm } from "antd";
 import * as XLSX from "xlsx";
 import styled from "styled-components";
 import { ScopeTag } from "@/components/Carbon/ScopeTag";
@@ -21,6 +24,10 @@ import {
   Upload,
   type UploadProps,
 } from "@/components/common/styles";
+import ManualActivityRowModal, {
+  type ManualActivityForm,
+  emptyManualActivityForm,
+} from "./ManualActivityRowModal";
 
 type CarbonScope = "scope1" | "scope2" | "scope3";
 
@@ -28,6 +35,7 @@ type ParsedActivityRow = {
   id: string;
   sheetName: string;
   rowNumber: number;
+  source: "excel" | "manual";
   activityDate: string;
   type: string;
   description: string;
@@ -245,6 +253,10 @@ const PreviewSection = styled(SurfaceSection)`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  .ant-table-tbody > tr {
+    cursor: pointer;
+  }
 `;
 
 const CountBadge = styled.div`
@@ -425,6 +437,7 @@ function parseWorksheet(
         id: `${sheetName}-${absoluteRowNumber}`,
         sheetName,
         rowNumber: absoluteRowNumber,
+        source: "excel",
         activityDate,
         type,
         description,
@@ -571,6 +584,20 @@ function validatePreview(
   };
 }
 
+function validateParsedRow(
+  row: ParsedActivityRow,
+  masters: ValidationMasters,
+): PreviewActivityRow {
+  return validatePreview(
+    {
+      sheetName: row.sheetName,
+      headerRowNumber: 0,
+      rows: [row],
+    },
+    masters,
+  ).rows[0];
+}
+
 function formatNumber(value: number) {
   return value.toLocaleString("ko-KR", {
     maximumFractionDigits: 6,
@@ -581,11 +608,32 @@ function getScopeLabel(scope: CarbonScope) {
   return scope.replace("scope", "Scope ");
 }
 
+function getNextPreviewRowNumber(preview: PreviewResult | null) {
+  return Math.max(0, ...(preview?.rows.map((row) => row.rowNumber) ?? [])) + 1;
+}
+
+function toManualActivityForm(row: PreviewActivityRow): ManualActivityForm {
+  return {
+    activityDate: row.activityDate,
+    type: row.type,
+    description: row.description,
+    amount: String(row.amount),
+    unit: row.unit,
+  };
+}
+
 export default function CarbonActivitiesImportPage() {
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [manualForm, setManualForm] = useState<ManualActivityForm>(
+    emptyManualActivityForm,
+  );
+  const [editingRow, setEditingRow] = useState<PreviewActivityRow | null>(null);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isManualSaving, setIsManualSaving] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{
     type: "error" | "success";
     text: string;
@@ -634,6 +682,116 @@ export default function CarbonActivitiesImportPage() {
       return false;
     },
   };
+
+  const openCreateRowModal = () => {
+    setEditingRow(null);
+    setManualForm(emptyManualActivityForm);
+    setManualError(null);
+    setIsManualModalOpen(true);
+  };
+
+  const openEditRowModal = (row: PreviewActivityRow) => {
+    setEditingRow(row);
+    setManualForm(toManualActivityForm(row));
+    setManualError(null);
+    setIsManualModalOpen(true);
+  };
+
+  const closeManualModal = () => {
+    if (isManualSaving) {
+      return;
+    }
+
+    setIsManualModalOpen(false);
+    setEditingRow(null);
+    setManualError(null);
+  };
+
+  const handleManualSubmit = async (form: ManualActivityForm) => {
+    const activityDate = form.activityDate.trim();
+    const type = form.type.trim();
+    const description = form.description.trim();
+    const amount = parseAmount(form.amount);
+    const unit = form.unit.trim();
+
+    if (!activityDate || !type || !description || amount === null || !unit) {
+      setManualError("일자, 활동 유형, 설명(상세 내역), 량, 단위를 확인해주세요.");
+      return;
+    }
+
+    setIsManualSaving(true);
+    setManualError(null);
+    setStatusMessage(null);
+
+    try {
+      const masters = await loadValidationMasters();
+      const baseRow: ParsedActivityRow = {
+        id: editingRow?.id ?? `manual-${Date.now()}`,
+        sheetName: editingRow?.sheetName ?? "직접 입력",
+        rowNumber: editingRow?.rowNumber ?? getNextPreviewRowNumber(preview),
+        source: editingRow?.source ?? "manual",
+        activityDate,
+        type,
+        description,
+        amount,
+        unit,
+      };
+      const validatedRow = validateParsedRow(baseRow, masters);
+
+      setPreview((currentPreview) => {
+        const nextPreview = currentPreview ?? {
+          sheetName: "직접 입력",
+          headerRowNumber: 0,
+          rows: [],
+        };
+        const rows = editingRow
+          ? nextPreview.rows.map((row) =>
+              row.id === editingRow.id ? validatedRow : row,
+            )
+          : [...nextPreview.rows, validatedRow];
+
+        return {
+          ...nextPreview,
+          rows,
+        };
+      });
+      setIsManualModalOpen(false);
+      setEditingRow(null);
+      setStatusMessage({
+        type: "success",
+        text: editingRow
+          ? "미리보기 행을 수정했습니다."
+          : "미리보기 행을 추가했습니다.",
+      });
+    } catch (error) {
+      setManualError(
+        error instanceof Error
+          ? error.message
+          : "입력한 행의 유효성을 확인할 수 없습니다.",
+      );
+    } finally {
+      setIsManualSaving(false);
+    }
+  };
+
+  const handleDeleteRow = useCallback((row: PreviewActivityRow) => {
+    setPreview((currentPreview) => {
+      if (!currentPreview) {
+        return currentPreview;
+      }
+
+      return {
+        ...currentPreview,
+        rows: currentPreview.rows.filter(
+          (previewRow) => previewRow.id !== row.id,
+        ),
+      };
+    });
+    setStatusMessage({
+      type: "success",
+      text: "미리보기 행을 삭제했습니다.",
+    });
+  }, []);
 
   const handleUpload = async () => {
     if (!preview || preview.rows.length === 0) {
@@ -693,10 +851,10 @@ export default function CarbonActivitiesImportPage() {
   const columns = useMemo(
     () => [
       {
-        title: "엑셀 행",
+        title: "행",
         dataIndex: "rowNumber",
         key: "rowNumber",
-        width: "8%",
+        width: "7%",
         align: "left" as const,
         ellipsis: true,
       },
@@ -704,7 +862,7 @@ export default function CarbonActivitiesImportPage() {
         title: "일자(원본)",
         dataIndex: "activityDate",
         key: "activityDate",
-        width: "13%",
+        width: "12%",
         align: "left" as const,
         ellipsis: true,
       },
@@ -712,7 +870,7 @@ export default function CarbonActivitiesImportPage() {
         title: "활동 유형",
         dataIndex: "type",
         key: "type",
-        width: "13%",
+        width: "12%",
         align: "left" as const,
         ellipsis: true,
       },
@@ -720,7 +878,7 @@ export default function CarbonActivitiesImportPage() {
         title: "설명(상세 내역)",
         dataIndex: "description",
         key: "description",
-        width: "25%",
+        width: "22%",
         align: "left" as const,
         ellipsis: true,
       },
@@ -728,7 +886,7 @@ export default function CarbonActivitiesImportPage() {
         title: "량",
         dataIndex: "amount",
         key: "amount",
-        width: "10%",
+        width: "8%",
         align: "left" as const,
         ellipsis: true,
         render: (value: number) => formatNumber(value),
@@ -737,7 +895,7 @@ export default function CarbonActivitiesImportPage() {
         title: "단위",
         dataIndex: "unit",
         key: "unit",
-        width: "8%",
+        width: "7%",
         align: "left" as const,
         ellipsis: true,
       },
@@ -756,13 +914,38 @@ export default function CarbonActivitiesImportPage() {
         title: "적용 계수",
         dataIndex: "appliedFactor",
         key: "appliedFactor",
-        width: "13%",
+        width: "12%",
         align: "left" as const,
         ellipsis: true,
         render: (value: number) => formatNumber(value),
       },
+      {
+        title: "삭제",
+        key: "actions",
+        width: "10%",
+        align: "left" as const,
+        render: (_: unknown, row: object) => {
+          const previewRow = row as PreviewActivityRow;
+
+          return (
+            <span onClick={(event) => event.stopPropagation()}>
+              <Popconfirm
+                title="미리보기 행 삭제"
+                description="선택한 행을 삭제할까요?"
+                okText="삭제"
+                cancelText="취소"
+                onConfirm={() => handleDeleteRow(previewRow)}
+              >
+                <Button icon={<DeleteOutlined />} customColor="danger-red">
+                  삭제
+                </Button>
+              </Popconfirm>
+            </span>
+          );
+        },
+      },
     ],
-    [],
+    [handleDeleteRow],
   );
 
   return (
@@ -844,6 +1027,13 @@ export default function CarbonActivitiesImportPage() {
                 </CountBadge>
               ) : null}
               <Button
+                icon={<PlusOutlined />}
+                onClick={openCreateRowModal}
+                disabled={isParsing || isUploading}
+              >
+                행 추가
+              </Button>
+              <Button
                 icon={<UploadOutlined />}
                 onClick={handleUpload}
                 disabled={!preview || preview.rows.length === 0 || isUploading}
@@ -853,7 +1043,21 @@ export default function CarbonActivitiesImportPage() {
               </Button>
             </>
           }
+          onRow={(row) => ({
+            onClick: () => openEditRowModal(row as PreviewActivityRow),
+          })}
           locale={{ emptyText: "미리보기 데이터가 없습니다." }}
+        />
+
+        <ManualActivityRowModal
+          open={isManualModalOpen}
+          mode={editingRow ? "edit" : "create"}
+          form={manualForm}
+          confirmLoading={isManualSaving}
+          errorMessage={manualError}
+          onChange={setManualForm}
+          onCancel={closeManualModal}
+          onSubmit={handleManualSubmit}
         />
       </PreviewSection>
     </AdminPageMain>
