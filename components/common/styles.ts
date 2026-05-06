@@ -25,6 +25,9 @@ export type { InputProps } from "./Input/input";
 
 export { message } from "./Message/message";
 
+export { PopupModal, PopupModalFooter } from "./Modal/modal";
+export type { PopupModalProps } from "./Modal/modal";
+
 export { Select } from "./SelectBox/selectBox";
 export type { SelectProps } from "./SelectBox/selectBox";
 

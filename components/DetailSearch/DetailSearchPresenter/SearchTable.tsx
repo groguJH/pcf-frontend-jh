@@ -8,6 +8,7 @@ import {
   Select,
   Tag,
 } from "@/components/common/styles";
+import { ScopeTag } from "@/components/Carbon/ScopeTag";
 import {
   DeleteOutlined,
   PlusOutlined,
@@ -159,7 +160,7 @@ const columns = [
     width: "13%",
     align: "left" as const,
     ellipsis: true,
-    render: (text: string) => <S.ScopeTag $type={text}>{text}</S.ScopeTag>,
+    render: (text: string) => <ScopeTag $scope={text}>{text}</ScopeTag>,
   },
   {
     title: "활동 유형",

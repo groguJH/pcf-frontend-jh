@@ -201,3 +201,69 @@ export async function PATCH(request: Request) {
     );
   }
 }
+
+/**
+ * @swagger
+ * /api/emission-categories:
+ *   delete:
+ *     tags:
+ *       - Master Data
+ *     summary: 배출원 카테고리 삭제
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *               - scope
+ *             properties:
+ *               type:
+ *                 type: string
+ *               scope:
+ *                 $ref: '#/components/schemas/CarbonScope'
+ *     responses:
+ *       200:
+ *         description: 삭제된 카테고리
+ *       400:
+ *         description: 입력값 검증 실패
+ *       500:
+ *         description: 카테고리 삭제 실패
+ */
+export async function DELETE(request: Request) {
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    const type = typeof body.type === "string" ? body.type.trim() : "";
+    const scope = body.scope;
+
+    if (!type || !isValidScope(scope)) {
+      return Response.json(
+        { error: "삭제할 카테고리 정보를 확인해주세요." },
+        { status: 400 },
+      );
+    }
+
+    const prisma = getPrismaClient();
+    const category = await prisma.emissionCategory.delete({
+      where: {
+        type_scope: {
+          type,
+          scope,
+        },
+      },
+    });
+
+    return Response.json({ category });
+  } catch (error) {
+    return Response.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "카테고리를 삭제할 수 없습니다.",
+      },
+      { status: 500 },
+    );
+  }
+}

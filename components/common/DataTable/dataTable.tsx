@@ -23,6 +23,7 @@ type DataTablePagination =
 
 export type DataTableProps = Omit<TableProps<object>, "pagination"> & {
   pagination?: DataTablePagination;
+  topActions?: React.ReactNode;
 };
 
 const defaultPageSizeOptions = [10, 20, 50, 100];
@@ -30,7 +31,9 @@ const defaultPageSizeOptions = [10, 20, 50, 100];
 const TableTopBar = styled.div`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: flex-start;
+  gap: 1.2rem;
   margin-bottom: 1.2rem;
 `;
 
@@ -72,6 +75,14 @@ const PaginationSlot = styled.div`
   justify-self: center;
 `;
 
+const TableTopActions = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  margin-left: auto;
+`;
+
 function getPageRows(
   rows: readonly object[],
   page: number,
@@ -85,6 +96,7 @@ function getPageRows(
 export function DataTable({
   dataSource = [],
   pagination = {},
+  topActions,
   ...tableProps
 }: DataTableProps) {
   const [localPage, setLocalPage] = useState(1);
@@ -129,22 +141,25 @@ export function DataTable({
 
   return (
     <>
-      {pagination !== false && showPageSizeSelector ? (
+      {(pagination !== false && showPageSizeSelector) || topActions ? (
         <TableTopBar>
-          <PageSizeControl>
-            <span>페이지 크기</span>
-            <Select
-              value={pageSize}
-              style={{ width: "9rem" }}
-              onChange={handlePageSizeChange}
-            >
-              {pageSizeOptions.map((option) => (
-                <Option key={option} value={option}>
-                  {option}개
-                </Option>
-              ))}
-            </Select>
-          </PageSizeControl>
+          {pagination !== false && showPageSizeSelector ? (
+            <PageSizeControl>
+              <span>페이지 크기</span>
+              <Select
+                value={pageSize}
+                style={{ width: "9rem" }}
+                onChange={handlePageSizeChange}
+              >
+                {pageSizeOptions.map((option) => (
+                  <Option key={option} value={option}>
+                    {option}개
+                  </Option>
+                ))}
+              </Select>
+            </PageSizeControl>
+          ) : null}
+          {topActions ? <TableTopActions>{topActions}</TableTopActions> : null}
         </TableTopBar>
       ) : null}
 

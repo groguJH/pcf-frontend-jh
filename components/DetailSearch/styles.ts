@@ -62,24 +62,3 @@ export const QueryPrefix = styled.div`
     width: 100%;
   }
 `;
-
-export const ScopeTag = styled.span<{ $type: string }>`
-  padding: 0.4rem 1.2rem;
-  border-radius: 2rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-transform: uppercase;
-
-  ${({ $type }) => {
-    switch ($type) {
-      case "SCOPE 1":
-        return `background: #ff7a00; color: #ffffff;`;
-      case "SCOPE 2":
-        return `background: #1890ff; color: #ffffff;`;
-      case "SCOPE 3":
-        return `background: #52c41a; color: #ffffff;`;
-      default:
-        return `background: #f1f3f5; color: #868e96;`;
-    }
-  }}
-`;

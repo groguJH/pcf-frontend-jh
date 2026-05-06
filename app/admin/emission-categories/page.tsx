@@ -1,64 +1,32 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { Popconfirm } from "antd";
 import styled from "styled-components";
 import {
   Button,
   DataTable,
-  FieldLabel,
-  InlineGroup,
-  Input,
   PageMain,
   SectionHeader,
-  Select,
   SurfaceSection,
   TitleGroup,
 } from "@/components/common/styles";
-
-const { Option } = Select;
-
-type CarbonScope = "scope1" | "scope2" | "scope3";
-
-type EmissionCategory = {
-  type: string;
-  scope: CarbonScope;
-};
-
-type CategoryForm = {
-  type: string;
-  scope: CarbonScope;
-};
-
-const emptyForm: CategoryForm = {
-  type: "",
-  scope: "scope1",
-};
-
-const scopeOptions: { label: string; value: CarbonScope }[] = [
-  { label: "Scope 1", value: "scope1" },
-  { label: "Scope 2", value: "scope2" },
-  { label: "Scope 3", value: "scope3" },
-];
+import { ScopeTag } from "@/components/Carbon/ScopeTag";
+import EmissionCategoryModal, {
+  type CategoryForm,
+  type CarbonScope,
+  type EmissionCategory,
+  emptyCategoryForm,
+  scopeOptions,
+} from "./EmissionCategoryModal";
 
 const AdminPageMain = styled(PageMain)``;
 
-const FormGrid = styled.div`
-  display: grid;
-  grid-template-columns: minmax(18rem, 1fr) 16rem auto;
-  gap: 1.2rem;
-  align-items: end;
-  margin-bottom: 2.4rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    align-items: stretch;
+const CategorySection = styled(SurfaceSection)`
+  .ant-table-tbody > tr {
+    cursor: pointer;
   }
-`;
-
-const FieldBox = styled.label`
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
 `;
 
 const MessageText = styled.p<{ $type?: "error" | "success" }>`
@@ -68,25 +36,24 @@ const MessageText = styled.p<{ $type?: "error" | "success" }>`
   color: ${({ $type }) => ($type === "error" ? "#ff4d4f" : "#52c41a")};
 `;
 
-const ActionGroup = styled(InlineGroup)`
-  justify-content: flex-end;
-
-  @media (max-width: 768px) {
-    justify-content: flex-start;
-  }
-`;
-
 function getCategoryKey(category: EmissionCategory) {
   return `${category.type}-${category.scope}`;
 }
 
+function getScopeLabel(scope: CarbonScope) {
+  return scopeOptions.find((option) => option.value === scope)?.label ?? scope;
+}
+
 export default function EmissionCategoriesPage() {
   const [categories, setCategories] = useState<EmissionCategory[]>([]);
-  const [form, setForm] = useState<CategoryForm>(emptyForm);
   const [editingCategory, setEditingCategory] =
     useState<EmissionCategory | null>(null);
+  const [modalForm, setModalForm] = useState<CategoryForm>(emptyCategoryForm);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     type: "error" | "success";
     text: string;
@@ -130,32 +97,43 @@ export default function EmissionCategoriesPage() {
     return () => window.clearTimeout(timer);
   }, [loadCategories]);
 
-  const resetForm = () => {
-    setForm(emptyForm);
+  const openCreateModal = () => {
     setEditingCategory(null);
+    setModalForm(emptyCategoryForm);
+    setModalError(null);
+    setIsModalOpen(true);
   };
 
-  const handleEdit = (category: EmissionCategory) => {
+  const openEditModal = (category: EmissionCategory) => {
     setEditingCategory(category);
-    setForm({
+    setModalForm({
       type: category.type,
       scope: category.scope,
     });
-    setMessage(null);
+    setModalError(null);
+    setIsModalOpen(true);
   };
 
-  const handleSubmit = async () => {
+  const closeModal = () => {
+    if (isSaving) {
+      return;
+    }
+
+    setIsModalOpen(false);
+    setEditingCategory(null);
+    setModalError(null);
+  };
+
+  const handleSubmit = async (form: CategoryForm) => {
     const type = form.type.trim();
 
     if (!type) {
-      setMessage({
-        type: "error",
-        text: "배출원 유형을 입력해주세요.",
-      });
+      setModalError("배출원 유형을 입력해주세요.");
       return;
     }
 
     setIsSaving(true);
+    setModalError(null);
     setMessage(null);
 
     try {
@@ -184,26 +162,66 @@ export default function EmissionCategoriesPage() {
         throw new Error(body.error ?? "카테고리를 저장할 수 없습니다.");
       }
 
-      resetForm();
+      setIsModalOpen(false);
+      setEditingCategory(null);
       setMessage({
         type: "success",
         text: editingCategory
           ? "카테고리가 수정되었습니다."
-          : "카테고리가 생성되었습니다.",
+          : "카테고리가 추가되었습니다.",
       });
       await loadCategories();
     } catch (error) {
-      setMessage({
-        type: "error",
-        text:
-          error instanceof Error
-            ? error.message
-            : "카테고리를 저장할 수 없습니다.",
-      });
+      setModalError(
+        error instanceof Error
+          ? error.message
+          : "카테고리를 저장할 수 없습니다.",
+      );
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleDelete = useCallback(
+    async (category: EmissionCategory) => {
+      const categoryKey = getCategoryKey(category);
+
+      setDeletingKey(categoryKey);
+      setMessage(null);
+
+      try {
+        const response = await fetch("/api/emission-categories", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(category),
+        });
+        const body = (await response.json()) as { error?: string };
+
+        if (!response.ok) {
+          throw new Error(body.error ?? "카테고리를 삭제할 수 없습니다.");
+        }
+
+        setMessage({
+          type: "success",
+          text: "카테고리가 삭제되었습니다.",
+        });
+        await loadCategories();
+      } catch (error) {
+        setMessage({
+          type: "error",
+          text:
+            error instanceof Error
+              ? error.message
+              : "카테고리를 삭제할 수 없습니다.",
+        });
+      } finally {
+        setDeletingKey(null);
+      }
+    },
+    [loadCategories],
+  );
 
   const columns = useMemo(
     () => [
@@ -216,86 +234,52 @@ export default function EmissionCategoriesPage() {
         title: "Scope",
         dataIndex: "scope",
         key: "scope",
-        render: (scope: CarbonScope) =>
-          scopeOptions.find((option) => option.value === scope)?.label ?? scope,
+        render: (scope: CarbonScope) => (
+          <ScopeTag $scope={scope}>{getScopeLabel(scope)}</ScopeTag>
+        ),
       },
       {
-        title: "관리",
+        title: "삭제",
         key: "actions",
-        align: "right" as const,
+        width: "80px",
         render: (_: unknown, category: object) => {
           const typedCategory = category as EmissionCategory;
+          const categoryKey = getCategoryKey(typedCategory);
 
           return (
-            <Button variant="default" onClick={() => handleEdit(typedCategory)}>
-              수정
-            </Button>
+            <span onClick={(event) => event.stopPropagation()}>
+              <Popconfirm
+                title="배출원 카테고리 삭제"
+                description="선택한 카테고리를 삭제할까요?"
+                okText="삭제"
+                cancelText="취소"
+                onConfirm={() => handleDelete(typedCategory)}
+              >
+                <Button
+                  icon={<DeleteOutlined />}
+                  customColor="danger-red"
+                  loading={deletingKey === categoryKey}
+                >
+                  삭제
+                </Button>
+              </Popconfirm>
+            </span>
           );
         },
       },
     ],
-    [],
+    [deletingKey, handleDelete],
   );
 
   return (
     <AdminPageMain>
-      <SurfaceSection>
+      <CategorySection>
         <SectionHeader>
           <TitleGroup>
             <h2>배출원 카테고리 관리</h2>
             <p>배출원 유형별 Scope 분류를 등록하고 수정합니다.</p>
           </TitleGroup>
         </SectionHeader>
-
-        <FormGrid>
-          <FieldBox>
-            <FieldLabel>배출원 유형</FieldLabel>
-            <Input
-              value={form.type}
-              placeholder="예: 전기, 원소재, 운송"
-              onChange={(event) =>
-                setForm((prev) => ({
-                  ...prev,
-                  type: event.target.value,
-                }))
-              }
-            />
-          </FieldBox>
-
-          <FieldBox>
-            <FieldLabel>Scope</FieldLabel>
-            <Select
-              value={form.scope}
-              onChange={(scope) =>
-                setForm((prev) => ({
-                  ...prev,
-                  scope: scope as CarbonScope,
-                }))
-              }
-            >
-              {scopeOptions.map((option) => (
-                <Option key={option.value} value={option.value}>
-                  {option.label}
-                </Option>
-              ))}
-            </Select>
-          </FieldBox>
-
-          <ActionGroup>
-            {editingCategory ? (
-              <Button
-                variant="default"
-                customColor="subGray"
-                onClick={resetForm}
-              >
-                취소
-              </Button>
-            ) : null}
-            <Button onClick={handleSubmit} disabled={isSaving}>
-              {editingCategory ? "수정" : "등록"}
-            </Button>
-          </ActionGroup>
-        </FormGrid>
 
         <MessageText $type={message?.type}>{message?.text ?? ""}</MessageText>
 
@@ -304,8 +288,27 @@ export default function EmissionCategoriesPage() {
           dataSource={categories}
           columns={columns}
           loading={isLoading}
+          topActions={
+            <Button icon={<PlusOutlined />} onClick={openCreateModal}>
+              추가
+            </Button>
+          }
+          onRow={(category) => ({
+            onClick: () => openEditModal(category as EmissionCategory),
+          })}
         />
-      </SurfaceSection>
+      </CategorySection>
+
+      <EmissionCategoryModal
+        open={isModalOpen}
+        mode={editingCategory ? "edit" : "create"}
+        form={modalForm}
+        confirmLoading={isSaving}
+        errorMessage={modalError}
+        onChange={setModalForm}
+        onCancel={closeModal}
+        onSubmit={handleSubmit}
+      />
     </AdminPageMain>
   );
 }
