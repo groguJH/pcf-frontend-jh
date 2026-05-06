@@ -28,6 +28,25 @@ export type ActivityFilterRule = {
   value: string;
 };
 
+export type MonthlyEmissionRow = {
+  month: string;
+  total: number;
+  scope1: number;
+  scope2: number;
+  scope3: number;
+};
+
+export type CarbonDashboardSummary = {
+  kpi: {
+    total: number;
+    scope1: number;
+    scope2: number;
+    scope3: number;
+  };
+  monthly: MonthlyEmissionRow[];
+  rowsMatched: number;
+};
+
 export type CarbonActivityPage = {
   rows: CarbonActivity[];
   totalRows: number;

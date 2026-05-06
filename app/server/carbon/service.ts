@@ -6,6 +6,8 @@ import {
   type ActivityFilterRule,
   type CarbonActivityPage,
   type CarbonBaseFilters,
+  type CarbonDashboardSummary,
+  type MonthlyEmissionRow,
 } from "@/app/lib/carbon-api";
 import {
   calculateCarbonActivity,
@@ -210,6 +212,63 @@ function applyRules(rows: CarbonActivity[], rules: ActivityFilterRule[]) {
 
     return isMatch;
   });
+}
+
+function sumByScope(rows: CarbonActivity[]) {
+  return rows.reduce(
+    (accumulator, row) => {
+      accumulator.total += row.emissionKgCo2e;
+      accumulator[row.scope] += row.emissionKgCo2e;
+      return accumulator;
+    },
+    {
+      total: 0,
+      scope1: 0,
+      scope2: 0,
+      scope3: 0,
+    },
+  );
+}
+
+function buildMonthlyRows(rows: CarbonActivity[]): MonthlyEmissionRow[] {
+  const months = Array.from({ length: 12 }, (_, index) => ({
+    month: `${index + 1}월`,
+    total: 0,
+    scope1: 0,
+    scope2: 0,
+    scope3: 0,
+  }));
+
+  rows.forEach((row) => {
+    const monthIndex = Number(row.activityDate.slice(5, 7)) - 1;
+
+    if (monthIndex >= 0 && monthIndex < months.length) {
+      months[monthIndex].total += row.emissionKgCo2e;
+      months[monthIndex][row.scope] += row.emissionKgCo2e;
+    }
+  });
+
+  return months.map((month) => ({
+    ...month,
+    total: Number(month.total.toFixed(3)),
+    scope1: Number(month.scope1.toFixed(3)),
+    scope2: Number(month.scope2.toFixed(3)),
+    scope3: Number(month.scope3.toFixed(3)),
+  }));
+}
+
+export async function getCarbonDashboardSummary(
+  searchParams = new URLSearchParams(),
+): Promise<CarbonDashboardSummary> {
+  const { baseFilters } = parseActivityQuery(searchParams);
+  const rows = await getCarbonActivityRepository().listActivities();
+  const filteredRows = filterByBase(rows, baseFilters);
+
+  return {
+    kpi: sumByScope(filteredRows),
+    monthly: buildMonthlyRows(filteredRows),
+    rowsMatched: filteredRows.length,
+  };
 }
 
 export async function listCarbonActivities(
