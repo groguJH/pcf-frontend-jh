@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { Popconfirm } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import {
   Button,
@@ -47,6 +46,8 @@ function toFactorForm(factor: EmissionFactor): FactorForm {
     factorValue: String(factor.factorValue),
     validFrom: factor.validFrom,
     validTo: factor.validTo ?? "",
+    originalValidTo: factor.validTo ?? "",
+    changeType: "correction",
   };
 }
 
@@ -59,7 +60,6 @@ export default function EmissionFactorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     type: "error" | "success";
@@ -164,10 +164,17 @@ export default function EmissionFactorsPage() {
           unit,
           factorValue,
           validFrom: form.validFrom,
-          validTo: form.validTo || null,
+          validTo:
+            editingFactor && form.changeType === "revision"
+              ? undefined
+              : form.validTo || null,
+          changeType: editingFactor ? form.changeType : undefined,
         }),
       });
-      const body = (await response.json()) as { error?: string };
+      const body = (await response.json()) as {
+        error?: string;
+        recalculatedActivities?: number;
+      };
 
       if (!response.ok) {
         throw new Error(body.error ?? "배출계수를 저장할 수 없습니다.");
@@ -178,7 +185,11 @@ export default function EmissionFactorsPage() {
       setMessage({
         type: "success",
         text: editingFactor
-          ? "배출계수가 수정되었습니다."
+          ? form.changeType === "revision"
+            ? "새 배출계수 버전이 등록되었습니다."
+            : `배출계수가 소급 정정되었습니다. ${(
+                body.recalculatedActivities ?? 0
+              ).toLocaleString("ko-KR")}건의 활동 내역을 재계산했습니다.`
           : "배출계수가 추가되었습니다.",
       });
       await loadFactors();
@@ -192,45 +203,6 @@ export default function EmissionFactorsPage() {
       setIsSaving(false);
     }
   };
-
-  const handleDelete = useCallback(
-    async (factor: EmissionFactor) => {
-      setDeletingId(factor.id);
-      setMessage(null);
-
-      try {
-        const response = await fetch("/api/emission-factors", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id: factor.id }),
-        });
-        const body = (await response.json()) as { error?: string };
-
-        if (!response.ok) {
-          throw new Error(body.error ?? "배출계수를 삭제할 수 없습니다.");
-        }
-
-        setMessage({
-          type: "success",
-          text: "배출계수가 삭제되었습니다.",
-        });
-        await loadFactors();
-      } catch (error) {
-        setMessage({
-          type: "error",
-          text:
-            error instanceof Error
-              ? error.message
-              : "배출계수를 삭제할 수 없습니다.",
-        });
-      } finally {
-        setDeletingId(null);
-      }
-    },
-    [loadFactors],
-  );
 
   const columns = useMemo(
     () => [
@@ -266,36 +238,8 @@ export default function EmissionFactorsPage() {
         key: "validTo",
         render: (value: string | null) => value ?? "-",
       },
-      {
-        title: "삭제",
-        key: "actions",
-        width: "80px",
-        render: (_: unknown, factor: object) => {
-          const typedFactor = factor as EmissionFactor;
-
-          return (
-            <span onClick={(event) => event.stopPropagation()}>
-              <Popconfirm
-                title="배출계수 삭제"
-                description="선택한 배출계수를 삭제할까요?"
-                okText="삭제"
-                cancelText="취소"
-                onConfirm={() => handleDelete(typedFactor)}
-              >
-                <Button
-                  icon={<DeleteOutlined />}
-                  customColor="danger-red"
-                  loading={deletingId === typedFactor.id}
-                >
-                  삭제
-                </Button>
-              </Popconfirm>
-            </span>
-          );
-        },
-      },
     ],
-    [deletingId, handleDelete],
+    [],
   );
 
   return (
