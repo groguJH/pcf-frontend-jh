@@ -24,8 +24,8 @@ export const SideNav = styled.nav<{ $isOpen: boolean }>`
 
 export const NavItem = styled.div`
   width: 100%;
-  font-size: 1.8rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 500;
   cursor: pointer;
   color: #333;
   white-space: nowrap;
@@ -45,7 +45,7 @@ export const SubNavList = styled.div`
 
 export const SubNavItem = styled.div`
   width: 100%;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 500;
   cursor: pointer;
   color: #666666;

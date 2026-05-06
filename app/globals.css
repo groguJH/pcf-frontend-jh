@@ -13,7 +13,7 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-size: clamp(10px, calc(10 / 390 * 100vw), 16px);
+  font-size: clamp(10px, calc(10 / 390 * 100vw), 14px);
 }
 
 body {

@@ -1,6 +1,7 @@
 import React from "react";
 import * as S from "@/components/Dashboard/styles";
 import { Button, RangePicker } from "@/components/common/styles";
+import { ConfigProvider } from "antd";
 import dayjs from "dayjs";
 import type { CarbonBaseFilters } from "@/app/lib/carbon-api";
 import type { CarbonScope } from "@/app/lib/carbon-data";
@@ -17,6 +18,12 @@ const scopeOptions: { scope: CarbonScope; label: string }[] = [
   { scope: "scope2", label: "간접배출" },
   { scope: "scope3", label: "가치사슬" },
 ];
+
+const scopeButtonColors: Record<CarbonScope, "scope1" | "scope2" | "scope3"> = {
+  scope1: "scope1",
+  scope2: "scope2",
+  scope3: "scope3",
+};
 
 export default function FilterBarSection({
   filters,
@@ -56,19 +63,23 @@ export default function FilterBarSection({
               }}
             />
           </S.FilterWrapper>
-          <S.ToggleButtonGroup>
-            {scopeOptions.map((option) => (
-              <Button
-                key={option.scope}
-                customColor={
-                  filters.scopes[option.scope] ? "mainBlue" : "subGray"
-                }
-                onClick={() => handleScopeToggle(option.scope)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </S.ToggleButtonGroup>
+          <ConfigProvider wave={{ disabled: true }}>
+            <S.ToggleButtonGroup>
+              {scopeOptions.map((option) => (
+                <Button
+                  key={option.scope}
+                  customColor={
+                    filters.scopes[option.scope]
+                      ? scopeButtonColors[option.scope]
+                      : "subGray"
+                  }
+                  onClick={() => handleScopeToggle(option.scope)}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </S.ToggleButtonGroup>
+          </ConfigProvider>
         </S.FilterGroup>
       </S.FilterBarWrapper>
     </>

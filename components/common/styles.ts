@@ -42,6 +42,9 @@ export {
 export { Table } from "./Table/table";
 export type { TableProps } from "./Table/table";
 
+export { Statistic } from "./Statistic/statistic";
+export type { StatisticProps } from "./Statistic/statistic";
+
 export { Tag } from "./Tag/tag";
 export type { TagProps } from "./Tag/tag";
 

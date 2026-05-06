@@ -22,6 +22,16 @@ export const PageHeader = styled.header`
   align-items: center;
   padding: 0 1rem;
 
+  h2 {
+    font-size: 1.7rem;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 1.25rem;
+    font-weight: 400;
+  }
+
   @media (max-width: 768px) {
     height: 4rem;
   }
@@ -92,8 +102,8 @@ export const FieldGroup = styled.div`
 `;
 
 export const FieldLabel = styled.span`
-  font-size: 1.6rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 600;
   color: #333;
   white-space: nowrap;
 `;
@@ -112,14 +122,14 @@ export const SectionHeader = styled.div`
 
 export const TitleGroup = styled.div`
   h2 {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 1.7rem;
+    font-weight: 600;
     color: #1d2129;
     margin-bottom: 0.8rem;
   }
 
   p {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     color: #868e96;
   }
 `;

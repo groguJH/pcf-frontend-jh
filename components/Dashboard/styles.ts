@@ -2,57 +2,50 @@
 
 import styled from "styled-components";
 import {
-  ActionBar,
-  CardGrid,
-  CardTitle as CommonCardTitle,
   ChartPanel,
-  ChartSectionLayout,
   CompactSurfaceSection,
   FieldGroup,
   FieldLabel as CommonFieldLabel,
   InlineGroup,
-  MetricCard,
-  MetricUnit,
-  MetricValue,
-  MetricValueWrapper,
-  PageHeader,
   PageMain,
   ResponsiveRow,
   SectionTitle,
 } from "@/components/common/styles";
 
-export const DashboardPageMain = styled(PageMain)``;
+export const DashboardPageMain = styled(PageMain)`
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  padding-top: 10vh;
 
-export const DashboardHeader = styled(PageHeader)``;
+  @media (max-width: 768px) {
+    padding-top: 10vh;
+  }
+`;
 
-export const ButtonSection = styled(ActionBar)``;
+export const FilterBarWrapper = styled(CompactSurfaceSection)`
+  border-radius: 1.6rem;
+  padding: 2rem;
+  margin: 0;
+`;
 
-export const FilterBarWrapper = styled(CompactSurfaceSection)``;
+export const FilterGroup = styled(ResponsiveRow)`
+  align-items: center;
+`;
 
-export const FilterGroup = styled(ResponsiveRow)``;
-
-export const FilterWrapper = styled(FieldGroup)``;
+export const FilterWrapper = styled(FieldGroup)`
+  padding: 0;
+  align-items: center;
+`;
 
 export const FilterLabel = styled(CommonFieldLabel)``;
 
 export const ToggleButtonGroup = styled(InlineGroup)`
-  margin-right: 1rem;
+  margin-right: 0;
 `;
 
-export const ChartCardWrapper = styled(CardGrid)``;
-
-export const ChartCard = styled(MetricCard)``;
-
-export const CardTitle = styled(CommonCardTitle)``;
-
-export const CardValueWrapper = styled(MetricValueWrapper)``;
-
-export const CardValue = styled(MetricValue)``;
-
-export const CardUnit = styled(MetricUnit)``;
-
-export const ChartSection = styled(ChartSectionLayout)``;
-
-export const ChartContainer = styled(ChartPanel)``;
+export const ChartContainer = styled(ChartPanel)`
+  padding: 2rem;
+`;
 
 export const ChartTitle = styled(SectionTitle)``;

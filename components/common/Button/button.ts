@@ -3,7 +3,14 @@ import styled from "styled-components";
 import { Button as AntdButton } from "antd";
 import type { ButtonProps } from "antd";
 
-export type CustomColor = "mainBlue" | "mainGreen" | "subGray" | "danger-red";
+export type CustomColor =
+  | "mainBlue"
+  | "mainGreen"
+  | "subGray"
+  | "danger-red"
+  | "scope1"
+  | "scope2"
+  | "scope3";
 type CustomButtonVariant =
   | "primary"
   | "default"
@@ -17,6 +24,9 @@ const BUTTON_COLOR_MAP: Record<CustomColor, string> = {
   mainGreen: "#52c41a",
   subGray: "#8c8c8c",
   "danger-red": "#ff4d4f",
+  scope1: "#ff7a00",
+  scope2: "#1890ff",
+  scope3: "#52c41a",
 };
 
 export interface CustomButtonProps extends Omit<

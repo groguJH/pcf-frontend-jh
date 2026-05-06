@@ -1,9 +1,7 @@
 "use client";
-import DashboardHeader from "@/components/Dashboard/DashboardPresenter/Header";
 import FilterBarSection from "@/components/Dashboard/DashboardPresenter/FilterBarSection";
 import * as S from "@/components/Dashboard/styles";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import ChartCardSection from "@/components/Dashboard/DashboardPresenter/ChartCardSection";
 import MonthlyChartSection from "@/components/Dashboard/DashboardPresenter/MonthlyChartSection";
 import SearchTable from "@/components/DetailSearch/DetailSearchPresenter/SearchTable";
 import {
@@ -56,7 +54,6 @@ export default function HomePage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const baseQuery = useMemo(() => buildBaseQuery(filters), [filters]);
 
@@ -64,8 +61,6 @@ export default function HomePage() {
     const controller = new AbortController();
 
     async function loadSummary() {
-      setIsSummaryLoading(true);
-
       try {
         const response = await fetch(
           `/api/carbon-dashboard/summary?${baseQuery.toString()}`,
@@ -83,10 +78,6 @@ export default function HomePage() {
         if (!controller.signal.aborted) {
           console.error(error);
           setSummary(null);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsSummaryLoading(false);
         }
       }
     }
@@ -152,16 +143,10 @@ export default function HomePage() {
 
   return (
     <S.DashboardPageMain>
-      {/* 헤더 */}
-      <DashboardHeader />
-
       {/* 필터 바 */}
       <FilterBarSection filters={filters} onChange={handleFilterChange} />
 
-      {/* 차트 카드 */}
-      <ChartCardSection summary={summary} loading={isSummaryLoading} />
-
-      {/* recharts 막대표 */}
+      {/* Scope 비율 및 총량 추세 차트 */}
       <MonthlyChartSection rows={summary?.monthly ?? []} />
 
       {/* 페이지네이션 및 테이블 */}

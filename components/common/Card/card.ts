@@ -50,13 +50,13 @@ export const MetricValueWrapper = styled.div`
 `;
 
 export const MetricValue = styled.strong<{ $color?: string }>`
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.7rem;
+  font-weight: 600;
   color: ${(props) => props.$color || "#333333"};
 `;
 
 export const MetricUnit = styled.span`
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #888888;
 `;
 
@@ -85,8 +85,8 @@ export const ChartSectionLayout = styled.section`
 `;
 
 export const SectionTitle = styled.h3`
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 1.55rem;
+  font-weight: 600;
   margin-bottom: 1rem;
   color: #1d2129;
 `;

@@ -7,7 +7,10 @@ import {
   TitleGroup as CommonTitleGroup,
 } from "@/components/common/styles";
 
-export const DetailSearchWrapper = styled(SurfaceSection)``;
+export const DetailSearchWrapper = styled(SurfaceSection)`
+  padding: 2rem;
+  margin-top: 0;
+`;
 
 export const SearchHeader = styled(SectionHeader)``;
 
@@ -31,8 +34,8 @@ export const StyledTable = Table;
 export const ScopeTag = styled.span<{ $type: string }>`
   padding: 0.4rem 1.2rem;
   border-radius: 2rem;
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 600;
   text-transform: uppercase;
 
   ${({ $type }) => {
