@@ -11,12 +11,12 @@ import * as XLSX from "xlsx";
 import styled from "styled-components";
 import {
   Button,
+  DataTable,
   FieldLabel,
   InlineGroup,
   PageMain,
   SectionHeader,
   SurfaceSection,
-  Table,
   TitleGroup,
   Upload,
   type UploadProps,
@@ -614,11 +614,10 @@ export default function CarbonActivitiesImportPage() {
           </PreviewActions>
         </PreviewHeader>
 
-        <Table
+        <DataTable
           rowKey={(row) => String((row as PreviewActivityRow).id)}
           dataSource={preview?.rows ?? []}
           columns={columns}
-          pagination={{ pageSize: 10 }}
           scroll={{ x: 900 }}
           locale={{ emptyText: "미리보기 데이터가 없습니다." }}
         />

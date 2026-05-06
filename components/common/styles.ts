@@ -17,6 +17,9 @@ export {
 export { DatePicker, RangePicker } from "./DatePicker/datePicker";
 export type { DatePickerProps, RangePickerProps } from "./DatePicker/datePicker";
 
+export { DataTable } from "./DataTable/dataTable";
+export type { DataTableProps } from "./DataTable/dataTable";
+
 export { Input } from "./Input/input";
 export type { InputProps } from "./Input/input";
 

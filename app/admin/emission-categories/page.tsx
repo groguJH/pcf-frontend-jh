@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   Button,
+  DataTable,
   FieldLabel,
   InlineGroup,
   Input,
@@ -11,7 +12,6 @@ import {
   SectionHeader,
   Select,
   SurfaceSection,
-  Table,
   TitleGroup,
 } from "@/components/common/styles";
 
@@ -299,12 +299,11 @@ export default function EmissionCategoriesPage() {
 
         <MessageText $type={message?.type}>{message?.text ?? ""}</MessageText>
 
-        <Table
+        <DataTable
           rowKey={(category) => getCategoryKey(category as EmissionCategory)}
           dataSource={categories}
           columns={columns}
           loading={isLoading}
-          pagination={false}
         />
       </SurfaceSection>
     </AdminPageMain>

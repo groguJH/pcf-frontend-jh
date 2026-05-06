@@ -4,13 +4,13 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   Button,
+  DataTable,
   FieldLabel,
   InlineGroup,
   Input,
   PageMain,
   SectionHeader,
   SurfaceSection,
-  Table,
   TitleGroup,
 } from "@/components/common/styles";
 
@@ -377,12 +377,11 @@ export default function EmissionFactorsPage() {
 
         <MessageText $type={message?.type}>{message?.text ?? ""}</MessageText>
 
-        <Table
+        <DataTable
           rowKey={(factor) => String((factor as EmissionFactor).id)}
           dataSource={factors}
           columns={columns}
           loading={isLoading}
-          pagination={false}
         />
       </SurfaceSection>
     </AdminPageMain>

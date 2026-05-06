@@ -3,7 +3,6 @@ import {
   InlineGroup,
   SectionHeader,
   SurfaceSection,
-  Table,
   TitleGroup as CommonTitleGroup,
 } from "@/components/common/styles";
 
@@ -28,8 +27,6 @@ export const FilterBar = styled(InlineGroup)`
   gap: 1.2rem;
   margin-bottom: 3.2rem;
 `;
-
-export const StyledTable = Table;
 
 export const ScopeTag = styled.span<{ $type: string }>`
   padding: 0.4rem 1.2rem;

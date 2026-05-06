@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button, Input, Select, Tag } from "@/components/common/styles";
+import { Button, DataTable, Input, Select, Tag } from "@/components/common/styles";
 import {
   PlusOutlined,
   SearchOutlined,
@@ -103,6 +103,9 @@ export default function SearchTable({
   onSearch,
   onPageChange,
 }: SearchTableProps) {
+  const currentPage = activities?.page ?? 1;
+  const pageSize = activities?.pageSize ?? 10;
+  const totalRows = activities?.totalRows ?? 0;
   const dataSource: TableRow[] =
     activities?.rows.map((row) => ({
       key: String(row.id),
@@ -187,21 +190,16 @@ export default function SearchTable({
         />
       </S.FilterBar>
 
-      <S.StyledTable
+      <DataTable
         dataSource={dataSource}
         columns={columns}
         loading={loading}
         pagination={{
-          current: activities?.page ?? 1,
-          pageSize: activities?.pageSize ?? 10,
-          total: activities?.totalRows ?? 0,
-          showSizeChanger: true,
+          current: currentPage,
+          pageSize,
+          total: totalRows,
+          mode: "server",
           onChange: onPageChange,
-          itemRender: (page, type, originalElement) => {
-            if (type === "prev") return <a>이전</a>;
-            if (type === "next") return <a>다음</a>;
-            return originalElement;
-          },
         }}
       />
     </S.DetailSearchWrapper>
