@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:seed:carbon": "tsx scripts/seed-carbon-master-data.ts"
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.2",
