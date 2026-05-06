@@ -9,11 +9,11 @@ import {
 } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import styled from "styled-components";
+import { ScopeTag } from "@/components/Carbon/ScopeTag";
 import {
   Button,
   DataTable,
   FieldLabel,
-  InlineGroup,
   PageMain,
   SectionHeader,
   SurfaceSection,
@@ -22,7 +22,9 @@ import {
   type UploadProps,
 } from "@/components/common/styles";
 
-type PreviewActivityRow = {
+type CarbonScope = "scope1" | "scope2" | "scope3";
+
+type ParsedActivityRow = {
   id: string;
   sheetName: string;
   rowNumber: number;
@@ -33,10 +35,42 @@ type PreviewActivityRow = {
   unit: string;
 };
 
+type PreviewActivityRow = ParsedActivityRow & {
+  scope: CarbonScope;
+  appliedFactor: number;
+  emissionFactorId: number;
+};
+
 type PreviewResult = {
   sheetName: string;
   headerRowNumber: number;
   rows: PreviewActivityRow[];
+};
+
+type ParsedPreviewResult = {
+  sheetName: string;
+  headerRowNumber: number;
+  rows: ParsedActivityRow[];
+};
+
+type EmissionCategory = {
+  type: string;
+  scope: CarbonScope;
+};
+
+type EmissionFactor = {
+  id: number;
+  type: string;
+  description: string;
+  unit: string;
+  factorValue: number;
+  validFrom: string;
+  validTo: string | null;
+};
+
+type ValidationMasters = {
+  categories: EmissionCategory[];
+  factors: EmissionFactor[];
 };
 
 type RequiredField =
@@ -74,7 +108,7 @@ const AdminPageMain = styled(PageMain)``;
 
 const UploadPanel = styled.div`
   display: grid;
-  grid-template-columns: minmax(28rem, 1fr) minmax(22rem, 0.7fr);
+  grid-template-columns: minmax(22rem, 0.7fr) minmax(28rem, 1fr);
   gap: 2rem;
   align-items: stretch;
 
@@ -85,6 +119,7 @@ const UploadPanel = styled.div`
 
 const UploadBox = styled.div<{ $active?: boolean }>`
   display: flex;
+  height: 100%;
   min-height: 18rem;
   flex-direction: column;
   align-items: center;
@@ -118,17 +153,24 @@ const UploadBox = styled.div<{ $active?: boolean }>`
 
 const FullWidthUpload = styled(Upload)`
   display: block;
+  height: 100%;
   width: 100%;
 
   .ant-upload {
     display: block;
+    height: 100%;
     width: 100%;
+  }
+
+  .ant-upload-select {
+    height: 100%;
   }
 `;
 
 const FileMeta = styled.div`
   display: grid;
   grid-template-rows: auto 1fr;
+  min-height: 18rem;
   gap: 1.2rem;
   border: 1px solid #e9ecef;
   border-radius: 0.8rem;
@@ -147,7 +189,6 @@ const MetaList = styled.div`
 const MetaItem = styled.div`
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 1.2rem;
   border-bottom: 1px solid #f1f3f5;
   padding-bottom: 1rem;
@@ -158,16 +199,17 @@ const MetaItem = styled.div`
   }
 
   span:first-child {
-    flex: 0 0 auto;
+    flex: 0 0 5.6rem;
     color: #868e96;
   }
 
   span:last-child {
+    flex: 1 1 auto;
     min-width: 0;
     color: #212529;
     font-weight: 600;
     overflow-wrap: anywhere;
-    text-align: right;
+    text-align: left;
   }
 `;
 
@@ -191,6 +233,18 @@ const PreviewHeader = styled(SectionHeader)`
 
 const PreviewSection = styled(SurfaceSection)`
   margin-top: 1.6rem;
+
+  .ant-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `;
 
 const CountBadge = styled.div`
@@ -204,16 +258,6 @@ const CountBadge = styled.div`
   font-size: 1.4rem;
   font-weight: 700;
   white-space: nowrap;
-`;
-
-const PreviewActions = styled(InlineGroup)`
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-
-  @media (max-width: 768px) {
-    justify-content: flex-start;
-  }
 `;
 
 function normalizeHeader(value: unknown) {
@@ -234,6 +278,45 @@ function parseAmount(value: unknown) {
   const parsed = Number(getCellText(value).replaceAll(",", ""));
 
   return Number.isNaN(parsed) ? null : parsed;
+}
+
+function normalizeTextKey(value: string) {
+  return value.trim();
+}
+
+function normalizeDateText(value: string) {
+  const normalized = value.trim().replaceAll(".", "-").replaceAll("/", "-");
+  const compactDateMatch = normalized.match(/^(\d{4})(\d{2})(\d{2})$/);
+  const dashedDateText = compactDateMatch
+    ? `${compactDateMatch[1]}-${compactDateMatch[2]}-${compactDateMatch[3]}`
+    : normalized;
+  const dateMatch = dashedDateText.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+
+  if (!dateMatch) {
+    return null;
+  }
+
+  const [, year, month, day] = dateMatch;
+  const date = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day)),
+  );
+
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day)
+  ) {
+    return null;
+  }
+
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+function isFactorValidForDate(factor: EmissionFactor, activityDate: string) {
+  return (
+    factor.validFrom <= activityDate &&
+    (factor.validTo === null || factor.validTo >= activityDate)
+  );
 }
 
 function findHeaderIndexes(row: unknown[]) {
@@ -286,7 +369,7 @@ function isBlankDataRow(
 function parseWorksheet(
   worksheet: XLSX.WorkSheet,
   sheetName: string,
-): PreviewResult | null {
+): ParsedPreviewResult | null {
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
     header: 1,
     raw: false,
@@ -304,7 +387,7 @@ function parseWorksheet(
       continue;
     }
 
-    const rows: PreviewActivityRow[] = [];
+    const rows: ParsedActivityRow[] = [];
 
     for (
       let dataRowIndex = rowIndex + 1;
@@ -386,10 +469,116 @@ function parseWorkbook(workbook: XLSX.WorkBook) {
   throw new Error(`엑셀 파일에서 필수 컬럼을 찾을 수 없습니다: ${requiredHeaderText}`);
 }
 
+async function fetchJson<T>(url: string, fallbackErrorMessage: string) {
+  const response = await fetch(url);
+  const body = (await response.json()) as T & { error?: string };
+
+  if (!response.ok) {
+    throw new Error(body.error ?? fallbackErrorMessage);
+  }
+
+  return body;
+}
+
+async function loadValidationMasters(): Promise<ValidationMasters> {
+  const [categoryBody, factorBody] = await Promise.all([
+    fetchJson<{ categories?: EmissionCategory[] }>(
+      "/api/emission-categories",
+      "배출원 카테고리 목록을 불러올 수 없습니다.",
+    ),
+    fetchJson<{ factors?: EmissionFactor[] }>(
+      "/api/emission-factors",
+      "배출계수 목록을 불러올 수 없습니다.",
+    ),
+  ]);
+
+  return {
+    categories: categoryBody.categories ?? [],
+    factors: factorBody.factors ?? [],
+  };
+}
+
+function findMatchingFactor(
+  row: ParsedActivityRow,
+  activityDate: string,
+  factors: EmissionFactor[],
+) {
+  return factors
+    .filter(
+      (factor) =>
+        normalizeTextKey(factor.type) === normalizeTextKey(row.type) &&
+        normalizeTextKey(factor.description) ===
+          normalizeTextKey(row.description) &&
+        normalizeTextKey(factor.unit) === normalizeTextKey(row.unit) &&
+        isFactorValidForDate(factor, activityDate),
+    )
+    .sort((a, b) => b.validFrom.localeCompare(a.validFrom))[0];
+}
+
+function findBindableScope(row: ParsedActivityRow, categories: EmissionCategory[]) {
+  const matchedCategories = categories.filter(
+    (category) =>
+      normalizeTextKey(category.type) === normalizeTextKey(row.type),
+  );
+
+  if (matchedCategories.length === 0) {
+    throw new Error(
+      `${row.sheetName} 시트 ${row.rowNumber}행의 활동 유형 "${row.type}"에 바인딩할 Scope 카테고리가 없습니다.`,
+    );
+  }
+
+  if (matchedCategories.length > 1) {
+    throw new Error(
+      `${row.sheetName} 시트 ${row.rowNumber}행의 활동 유형 "${row.type}"에 Scope 카테고리가 여러 개라 자동 바인딩할 수 없습니다.`,
+    );
+  }
+
+  return matchedCategories[0].scope;
+}
+
+function validatePreview(
+  result: ParsedPreviewResult,
+  masters: ValidationMasters,
+): PreviewResult {
+  return {
+    ...result,
+    rows: result.rows.map((row) => {
+      const activityDate = normalizeDateText(row.activityDate);
+
+      if (!activityDate) {
+        throw new Error(
+          `${row.sheetName} 시트 ${row.rowNumber}행의 일자 형식을 확인해주세요.`,
+        );
+      }
+
+      const factor = findMatchingFactor(row, activityDate, masters.factors);
+
+      if (!factor) {
+        throw new Error(
+          `${row.sheetName} 시트 ${row.rowNumber}행에 대응되는 배출계수를 찾을 수 없습니다. 활동 유형, 설명(상세 내역), 단위, 일자를 확인해주세요.`,
+        );
+      }
+
+      const scope = findBindableScope(row, masters.categories);
+
+      return {
+        ...row,
+        scope,
+        appliedFactor: factor.factorValue,
+        emissionFactorId: factor.id,
+      };
+    }),
+  };
+}
+
 function formatNumber(value: number) {
   return value.toLocaleString("ko-KR", {
     maximumFractionDigits: 6,
   });
+}
+
+function getScopeLabel(scope: CarbonScope) {
+  return scope.replace("scope", "Scope ");
 }
 
 export default function CarbonActivitiesImportPage() {
@@ -405,26 +594,30 @@ export default function CarbonActivitiesImportPage() {
   const handleFile = async (file: File) => {
     setIsParsing(true);
     setPreview(null);
-    setSelectedFileName(file.name);
+    setSelectedFileName("");
     setStatusMessage(null);
 
     try {
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
-      const result = parseWorkbook(workbook);
+      const parsedResult = parseWorkbook(workbook);
+      const masters = await loadValidationMasters();
+      const result = validatePreview(parsedResult, masters);
 
       setPreview(result);
+      setSelectedFileName(file.name);
       setStatusMessage({
         type: "success",
-        text: `${result.rows.length.toLocaleString("ko-KR")}건의 데이터를 불러왔습니다.`,
+        text: `${result.rows.length.toLocaleString("ko-KR")}건의 데이터 배출계수와 Scope 매핑을 검증했습니다.`,
       });
     } catch (error) {
+      setSelectedFileName("");
       setStatusMessage({
         type: "error",
         text:
           error instanceof Error
             ? error.message
-            : "엑셀 파일을 읽을 수 없습니다.",
+            : "엑셀 파일 또는 마스터 데이터 검증 중 오류가 발생했습니다.",
       });
     } finally {
       setIsParsing(false);
@@ -435,7 +628,7 @@ export default function CarbonActivitiesImportPage() {
     accept: ".xlsx,.xls,.csv",
     disabled: isParsing || isUploading,
     maxCount: 1,
-    showUploadList: true,
+    showUploadList: false,
     beforeUpload: (file) => {
       void handleFile(file);
       return false;
@@ -459,10 +652,12 @@ export default function CarbonActivitiesImportPage() {
         body: JSON.stringify({
           rows: preview.rows.map((row) => ({
             activityDate: row.activityDate,
+            scope: row.scope,
             type: row.type,
             description: row.description,
             amount: row.amount,
             unit: row.unit,
+            appliedFactor: row.appliedFactor,
             sourceSheet: row.sheetName,
             sourceRowNumber: row.rowNumber,
             productName: "업로드 데이터",
@@ -501,34 +696,70 @@ export default function CarbonActivitiesImportPage() {
         title: "엑셀 행",
         dataIndex: "rowNumber",
         key: "rowNumber",
-        width: 100,
+        width: "8%",
+        align: "left" as const,
+        ellipsis: true,
       },
       {
         title: "일자(원본)",
         dataIndex: "activityDate",
         key: "activityDate",
+        width: "13%",
+        align: "left" as const,
+        ellipsis: true,
       },
       {
         title: "활동 유형",
         dataIndex: "type",
         key: "type",
+        width: "13%",
+        align: "left" as const,
+        ellipsis: true,
       },
       {
-        title: "설명",
+        title: "설명(상세 내역)",
         dataIndex: "description",
         key: "description",
+        width: "25%",
+        align: "left" as const,
+        ellipsis: true,
       },
       {
         title: "량",
         dataIndex: "amount",
         key: "amount",
-        align: "right" as const,
+        width: "10%",
+        align: "left" as const,
+        ellipsis: true,
         render: (value: number) => formatNumber(value),
       },
       {
         title: "단위",
         dataIndex: "unit",
         key: "unit",
+        width: "8%",
+        align: "left" as const,
+        ellipsis: true,
+      },
+      {
+        title: "Scope",
+        dataIndex: "scope",
+        key: "scope",
+        width: "10%",
+        align: "left" as const,
+        ellipsis: true,
+        render: (scope: CarbonScope) => (
+          <ScopeTag $scope={scope}>{getScopeLabel(scope)}</ScopeTag>
+        ),
+      },
+      {
+        title: "적용 계수",
+        dataIndex: "appliedFactor",
+        key: "appliedFactor",
+        width: "13%",
+        align: "left" as const,
+        ellipsis: true,
+        render: (value: number) => formatNumber(value),
       },
     ],
     [],
@@ -545,20 +776,12 @@ export default function CarbonActivitiesImportPage() {
         </SectionHeader>
 
         <UploadPanel>
-          <FullWidthUpload {...uploadProps}>
-            <UploadBox $active={Boolean(preview)}>
-              <CloudUploadOutlined />
-              <strong>엑셀 파일 선택</strong>
-              <span>.xlsx, .xls, .csv</span>
-            </UploadBox>
-          </FullWidthUpload>
-
           <FileMeta>
             <FieldLabel>필수 컬럼</FieldLabel>
             <MetaList>
               <MetaItem>
                 <span>컬럼</span>
-                <span>일자(원본), 활동 유형, 설명, 량, 단위</span>
+                <span>일자(원본), 활동 유형, 설명(상세 내역), 량, 단위</span>
               </MetaItem>
               <MetaItem>
                 <span>파일</span>
@@ -578,6 +801,14 @@ export default function CarbonActivitiesImportPage() {
               </MetaItem>
             </MetaList>
           </FileMeta>
+
+          <FullWidthUpload {...uploadProps}>
+            <UploadBox $active={Boolean(preview)}>
+              <CloudUploadOutlined />
+              <strong>엑셀 파일 선택</strong>
+              <span>.xlsx, .xls, .csv</span>
+            </UploadBox>
+          </FullWidthUpload>
         </UploadPanel>
 
         <MessageText $type={statusMessage?.type}>
@@ -597,28 +828,31 @@ export default function CarbonActivitiesImportPage() {
             </p>
           </TitleGroup>
 
-          <PreviewActions>
-            {preview ? (
-              <CountBadge>
-                <FileExcelOutlined />
-                {preview.rows.length.toLocaleString("ko-KR")}건
-              </CountBadge>
-            ) : null}
-            <Button
-              icon={<UploadOutlined />}
-              onClick={handleUpload}
-              disabled={!preview || preview.rows.length === 0 || isUploading}
-            >
-              DB 업로드
-            </Button>
-          </PreviewActions>
         </PreviewHeader>
 
         <DataTable
           rowKey={(row) => String((row as PreviewActivityRow).id)}
           dataSource={preview?.rows ?? []}
           columns={columns}
-          scroll={{ x: 900 }}
+          tableLayout="fixed"
+          topActions={
+            <>
+              {preview ? (
+                <CountBadge>
+                  <FileExcelOutlined />
+                  {preview.rows.length.toLocaleString("ko-KR")}건
+                </CountBadge>
+              ) : null}
+              <Button
+                icon={<UploadOutlined />}
+                onClick={handleUpload}
+                disabled={!preview || preview.rows.length === 0 || isUploading}
+                loading={isUploading}
+              >
+                DB 업로드
+              </Button>
+            </>
+          }
           locale={{ emptyText: "미리보기 데이터가 없습니다." }}
         />
       </PreviewSection>
