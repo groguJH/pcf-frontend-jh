@@ -307,3 +307,62 @@ export async function PATCH(request: Request) {
     );
   }
 }
+
+/**
+ * @swagger
+ * /api/emission-factors:
+ *   delete:
+ *     tags:
+ *       - Master Data
+ *     summary: 배출계수 삭제
+ */
+export async function DELETE(request: Request) {
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    const id = Number(body.id);
+
+    if (!Number.isInteger(id)) {
+      return Response.json(
+        { error: "삭제할 배출계수 정보를 확인해주세요." },
+        { status: 400 },
+      );
+    }
+
+    if (shouldUseMemoryRepository()) {
+      const factorIndex = memoryFactors.findIndex((factor) => factor.id === id);
+
+      if (factorIndex < 0) {
+        return Response.json(
+          { error: "삭제할 배출계수를 찾을 수 없습니다." },
+          { status: 500 },
+        );
+      }
+
+      const [factor] = memoryFactors.splice(factorIndex, 1);
+
+      return Response.json({ factor });
+    }
+
+    const prisma = getPrismaClient();
+    const factor = await prisma.emissionFactor.delete({
+      where: { id },
+    });
+
+    return Response.json({
+      factor: {
+        ...factor,
+        factorValue: Number(factor.factorValue),
+      },
+    });
+  } catch (error) {
+    return Response.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "배출계수를 삭제할 수 없습니다.",
+      },
+      { status: 500 },
+    );
+  }
+}
