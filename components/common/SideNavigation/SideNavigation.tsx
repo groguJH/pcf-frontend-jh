@@ -28,6 +28,7 @@ const navigationItems = [
     children: [
       { label: "배출원 카테고리", href: "/admin/emission-categories" },
       { label: "배출계수 관리", href: "/admin/emission-factors" },
+      { label: "활동 데이터 업로드", href: "/admin/carbon-activities/import" },
     ],
   },
 ];
