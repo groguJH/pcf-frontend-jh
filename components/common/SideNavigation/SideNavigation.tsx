@@ -21,7 +21,7 @@ import {
 } from "../Sidebar/sidebar";
 
 const navigationItems = [
-  { label: "대쉬보드", href: "/" },
+  { label: "대시보드", href: "/" },
   {
     label: "관리자",
     href: "/admin",

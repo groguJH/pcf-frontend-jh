@@ -1,303 +1,238 @@
-# 프롬프트 수행 내역 및 결과 보고서
+# AI 활용 프롬프트 및 결과 정리
 
-작성일: 2026-05-05
+작성일: 2026-05-07
 
 ## 1. 문서 목적
 
-본 문서는 `pcf-frontend-jh` 프로젝트에서 AI 도구를 활용해 수행한 주요 작업 요청과 결과를 정리한 보고서입니다. 각 항목은 실제 개발 요청의 의도를 기준으로 정리했으며, 회사 제출용 문서에 적합하도록 요청 배경, 수행 내용, 산출물, 검증 결과 중심으로 작성했습니다.
+이 문서는 PCF 탄소배출 관리 프로젝트를 개발하면서 AI를 어떤 방식으로 활용했는지 정리한 제출용 자료입니다.
 
-## 2. 프로젝트 전체 코드 분석 문서 작성
+실제 대화 원문을 그대로 옮긴 문서가 아니라,
+개발 과정에서 사용한 요청 의도와 결과를 면접관이 이해하기 쉽도록 정리한 문서입니다.
+요구사항 정리, 코드 구조 분석, 설계 검토, 구현 보조, 검증, 문서화에 AI를 활용했습니다.
 
-### 2.1 요청 프롬프트 요약
+## 2. AI 활용 방식 요약
 
-프로젝트 루트 경로의 전체 코드를 분석하고, 분석 결과를 한국어 Markdown 문서로 작성하도록 요청했습니다.
+AI는 다음 목적에 맞게 활용했습니다.
 
-### 2.2 수행 내용
+- 기존 코드 구조를 빠르게 파악하고 개선 범위를 정리
+- Next.js, Prisma, Ant Design 기반 프로젝트 구조에 맞는 구현 방향 검토
+- API, DB, UI 컴포넌트의 책임을 나누는 방식 제안
+- 반복적인 코드 작성과 리팩터링 보조
+- TypeScript, ESLint, 빌드 검증 과정에서 오류 원인 파악
+- README, ERD, 실행 방법 등 제출 문서 작성 보조
 
-`pcf-frontend-jh` 프로젝트의 주요 디렉터리와 파일을 분석했습니다.
+중요한 점은 현재 프로젝트 코드와 실제 요구사항에 맞는지 확인하면서 반영했다는 점입니다.
 
-분석 범위는 다음과 같습니다.
+## 3. 대표 요청 프롬프트와 결과
 
-- Next.js App Router 기반 구조
-- `app/layout.tsx`, `app/page.tsx`의 페이지 구성
-- Dashboard 관련 Presenter 컴포넌트
-- DetailSearch 관련 검색 테이블 컴포넌트
-- styled-components 기반 스타일 파일
-- Ant Design, Recharts, Prisma 등 주요 의존성
-- Prisma 및 PostgreSQL 연동 준비 상태
-- 린트, 타입체크, 빌드 가능 여부
+### 3.1 프로젝트 구조 분석
 
-### 2.3 산출물
-
-루트 경로에 다음 문서를 생성했습니다.
+#### 요청 프롬프트 정리본
 
 ```text
-CODEBASE_ANALYSIS.md
+현재 프로젝트 전체 코드를 분석해서 어떤 구조로 되어 있는지 정리해줘.
+Next.js 페이지 구조, 컴포넌트 역할, 스타일 방식, API와 DB 연동 상태를 확인하고
+앞으로 구현해야 할 기능과 개선 방향을 한국어 문서로 작성해줘.
 ```
 
-해당 문서에는 다음 내용이 포함되었습니다.
+#### 활용 의도
 
-- 프로젝트 개요
-- 주요 기술 스택
-- 디렉터리 구조 요약
-- 애플리케이션 렌더링 흐름
-- 주요 컴포넌트별 역할 분석
-- 전역 스타일 및 styled-components 구조 분석
-- 데이터베이스 및 백엔드 연동 상태
-- 현재 구현 완성도 평가
-- 개선 필요 항목
-- 향후 개발 권장 순서
+처음부터 코드를 바로 수정하기보다, 프로젝트가 어떤 구조로 작성되어 있는지 먼저 파악하기 위해 사용했습니다. 특히 화면 컴포넌트, 공용 컴포넌트, API, Prisma 모델의 역할이 어디까지 나뉘어 있는지 확인하는 데 중점을 두었습니다.
 
-### 2.4 결과
+#### 결과
 
-프로젝트가 현재 PCF 대시보드의 초기 화면 구현 단계이며, 주요 데이터와 기능은 정적 목업 중심으로 구성되어 있음을 문서화했습니다. 또한 실제 서비스 수준으로 확장하기 위해 필요한 API 연동, Prisma 모델 설계, 필터 상태 관리, 업로드/다운로드 기능 구현 등의 개선 방향을 정리했습니다.
+- `CODEBASE_ANALYSIS.md` 문서 작성
+- 주요 디렉터리와 파일 역할 정리
+- 대시보드, 상세 조건 조회, 업로드, 마스터 데이터 관리 화면의 구현 상태 파악
+- 정적 데이터에서 DB 기반 데이터로 전환해야 하는 부분 도출
+- 이후 개발 순서와 개선 우선순위 정리
 
-### 2.5 검증
+### 3.2 공용 컴포넌트 정리
 
-다음 명령을 실행하여 프로젝트 상태를 확인했습니다.
-
-```bash
-yarn lint
-yarn tsc --noEmit
-yarn build
-```
-
-검증 결과 ESLint, TypeScript 타입체크, Next.js 빌드는 통과했습니다. 빌드 중 기존 프로젝트 상태와 관련된 Next.js workspace root 추론 경고와 Recharts 컨테이너 크기 경고가 확인되었습니다.
-
-## 3. Ant Design 컴포넌트 공용화 및 스타일 모듈화
-
-### 3.1 요청 프롬프트 요약
-
-프로젝트 내에서 직접 사용 중인 Ant Design 컴포넌트를 `components/common` 하위의 커스텀 컴포넌트로 분리하고, 기존 사용처를 공용 컴포넌트 기반으로 교체하도록 요청했습니다.
-
-추가로, 기존 `components/common/Button/button.ts`에 작성된 Button 커스텀 스타일 방식을 참고하여 이를 기준으로 프로젝트의 코드 스타일을 유지하면서 모듈화하도록 요청했습니다.
-
-이후 `components/Dashboard/styles.ts`에 정의된 레이아웃 및 화면 스타일도 재사용 가능한 구조로 분리하여 파일 구조만 모듈화하는 방향으로 조정했습니다.
-
-### 3.2 수행 내용
-
-Ant Design 컴포넌트를 직접 import하던 구조를 줄이고, 공용 컴포넌트 계층을 구성했습니다.
-
-생성 및 정리한 공용 컴포넌트 파일은 다음과 같습니다.
+#### 요청 프롬프트 정리본
 
 ```text
-components/common/
-  Button/button.ts
-  Card/card.ts
-  DatePicker/datePicker.ts
-  Input/input.ts
-  Message/message.ts
-  PageLayout/pageLayout.ts
-  SelectBox/selectBox.ts
-  Table/table.ts
-  Tag/tag.ts
-  Upload/upload.ts
-  index.ts
+미리 작성해둔 Button 컴포넌트를 분석할때 styled-components 작성 방식을 참고해서
+Ant Design 컴포넌트를 components/common 하위 공용 컴포넌트로 모듈화 후 프로젝트 코드 스타일을 유지해줘.
+화면 디자인은 크게 바꾸지 말고, styles 파일을 사용해 import 경로와 재사용 구조를 중심으로 정리해줘.
 ```
 
-`components/common/index.ts`는 공용 컴포넌트 re-export 진입점으로 구성했습니다. 이를 통해 외부 컴포넌트는 하위 파일 경로를 직접 참조하지 않고 다음 방식으로 import할 수 있게 정리했습니다.
+#### 활용 의도
 
-```ts
-import { Button, Input, Select, RangePicker, Table } from "@/components/common";
-```
+화면마다 Ant Design 컴포넌트를 직접 가져다 쓰면 스타일과 사용 방식이 흩어질 수 있어서, 공용 컴포넌트 구조를 먼저 잡고 싶었습니다. 이후 No Data 표시, 버튼 스타일, 테이블 스타일 같은 공통 정책을 한 곳에서 관리하기 위한 목적도 있었습니다.
 
-### 3.3 주요 변경 파일
+#### 결과
 
-공용 컴포넌트 적용을 위해 다음 파일의 import 경로와 사용 컴포넌트를 정리했습니다.
+- `components/common` 하위에 Button, Table, Input, Select, Upload, NoData 등 공용 컴포넌트 정리
+- 대시보드와 상세 조회 화면의 공통 UI 사용 방식 통일
+- Ant Design의 Empty 컴포넌트를 활용한 공용 No Data 표시 추가
+- 버튼 클릭 wave 효과는 코드 사용처에서 제거하여 화면 동작을 정리
 
-- `app/page.tsx`
-- `components/Dashboard/DashboardPresenter/Header.tsx`
-- `components/Dashboard/DashboardPresenter/FilterBarSection.tsx`
-- `components/DetailSearch/DetailSearchPresenter/SearchTable.tsx`
-- `components/Dashboard/styles.ts`
-- `components/DetailSearch/styles.ts`
+### 3.3 API 실패 처리 방식 개선
 
-### 3.4 Button 공용화 결과
-
-`components/common/Button/button.ts`는 Ant Design Button을 styled-components로 감싼 공용 버튼 컴포넌트로 정리했습니다.
-
-주요 결과는 다음과 같습니다.
-
-- `Button`, `CustomButton` export 제공
-- `CustomButtonProps`, `CustomColor` 타입 export 제공
-- `customColor` prop을 통한 프로젝트 색상 선택 구조 유지
-- 기존 코드 스타일에 맞춰 styled-components 기반 래퍼 구조 유지
-- 외부 사용처는 `@/components/common`에서 import하도록 정리
-
-### 3.5 Table 공용화 결과
-
-상세검색 화면에서 사용하던 테이블 스타일을 업무용 기본 테이블로 분리했습니다.
-
-적용 기준은 다음과 같습니다.
-
-- 기존 `components/DetailSearch/styles.ts`에 정의되어 있던 Table 스타일 값 유지
-- 임의의 hover, border, pagination 스타일 추가 없이 기존 디자인만 공용화
-- `components/common/Table/table.ts`에서 공용 Table로 export
-- `components/DetailSearch/styles.ts`에서는 공용 Table을 참조하도록 정리
-
-### 3.6 Dashboard 스타일 모듈화 결과
-
-`components/Dashboard/styles.ts`에 정의되어 있던 레이아웃, 카드, 차트 관련 styled-components를 공용 파일로 분리했습니다.
-
-적용 기준은 다음과 같습니다.
-
-- 기존 export 변수명 유지
-- 기존 CSS 속성값 유지
-- 기존 화면 컴포넌트의 사용 방식 유지
-- 실제 스타일 정의만 `components/common/PageLayout/pageLayout.ts`, `components/common/Card/card.ts` 등으로 이동
-
-따라서 `components/Dashboard/styles.ts`는 대시보드 화면에서 사용하는 의미 있는 스타일 이름을 유지하면서, 내부적으로는 공용 스타일 모듈을 참조하는 구조가 되었습니다.
-
-### 3.7 결과
-
-Ant Design 컴포넌트와 주요 styled-components를 재사용 가능한 공용 구조로 분리했습니다. 화면 컴포넌트는 AntD 하위 경로를 직접 참조하지 않고 `components/common`을 통해 공용 컴포넌트를 사용할 수 있게 되었습니다.
-
-또한 기존 UI 속성값과 변수명을 유지하여, 기존 화면 구조와 스타일 의미가 크게 바뀌지 않도록 조정했습니다.
-
-### 3.8 검증
-
-다음 명령을 실행하여 변경사항을 검증했습니다.
-
-```bash
-yarn tsc --noEmit
-yarn lint
-yarn build
-```
-
-검증 결과 TypeScript 타입체크, ESLint, Next.js 빌드는 통과했습니다. 빌드 중 남은 경고는 기존과 동일한 Next.js workspace root 추론 경고와 Recharts 컨테이너 크기 경고입니다.
-
-## 4. API 코드 생성 프롬프트 작성 의도 분석
-
-### 4.1 요청 프롬프트 요약
-
-현재 API 코드는 다음 구조를 기준으로 작성되었습니다.
-
-- `app/api/.../route.ts`는 HTTP 요청과 응답만 담당
-- `app/server/carbon/service.ts`는 필터링, 페이지네이션, 정규화, 요약 계산 같은 비즈니스 로직 담당
-- `app/server/carbon/repository.ts`는 활동 데이터 조회 담당
-- `app/lib/carbon-api.ts`는 API 요청/응답 타입 담당
-- `app/lib/carbon-data.ts`는 샘플 데이터, 배출계수 매칭, 배출량 계산 담당
-
-이 구조에서 중요한 작성 의도는 route 파일을 얇게 유지하고, 실제 계산과 조회 책임을 service, repository, lib 레이어드 아키텍쳐 계층으로 나누어야합니다.
-
-또한 각 endpoint가 필요로 하는 기능만 포함하도록 범위를 제한했습니다. 예를 들어 활동 목록 API에는 활동 조회와 정규화 로직만 포함하고, 대시보드 요약 API에는 Scope별 합계와 월별 집계 로직만 포함하는 방식입니다.
-
-### 4.3 프롬프트에 포함해야 하는 핵심 조건
-
-- 생성할 API endpoint를 명확히 지정
-- `route.ts`는 요청 파싱, service 호출, 성공/오류 응답만 담당하도록 요청
-- 비즈니스 로직은 `app/server/carbon/service.ts`로 분리하도록 요청
-- 데이터 조회 로직은 `app/server/carbon/repository.ts`로 분리하도록 요청
-- API 요청/응답 타입은 `app/lib/carbon-api.ts`로 분리하도록 요청
-- 탄소 활동 데이터, 배출계수 매칭, 배출량 계산 로직은 `app/lib/carbon-data.ts`로 분리하도록 요청
-- 현재 endpoint에서 직접 사용하지 않는 다른 API용 함수는 포함하지 않도록 명시
-- import 경로는 프로젝트 alias인 `@/app/...`를 사용하도록 명시
-- 완료 후 타입체크, 린트, 빌드로 검증
-- 생성 또는 수정된 파일 목록을 제시
-
-### 4.4 권장 프롬프트 형식
-
-다음 형식으로 요청하면 지금까지 만든 코드와 같은 방식의 결과를 얻을 수 있습니다.
+#### 요청 프롬프트 정리본
 
 ```text
-[대상 API 경로]에 해당하는 Next.js App Router API 코드를 작성해줘.
-
-요구사항:
-- app/api/[대상 경로]/route.ts를 만들고, route 파일은 HTTP 요청/응답 처리만 담당하게 해줘.
-- 실제 비즈니스 로직은 app/server/carbon/service.ts에 함수로 분리해줘.
-- 데이터 조회 로직은 app/server/carbon/repository.ts로 분리해줘.
-- API 요청/응답 타입은 app/lib/carbon-api.ts에 정의해줘.
-- 탄소 활동 데이터, 배출계수 매칭, 배출량 계산은 app/lib/carbon-data.ts에 정의해줘.
-- import 경로는 @/app/... alias를 사용해줘.
-- 이 endpoint에서 직접 쓰지 않는 다른 API용 함수는 추가하지 마.
-
-기능 요구사항:
-- [GET/POST 등 HTTP method]를 구현해줘.
-- [query parameter 또는 request body]를 검증해줘.
-- 성공 응답과 오류 응답은 Response.json()으로 반환해줘.
-- 서버 API로 동작하도록 runtime = "nodejs", dynamic = "force-dynamic"을 명시해줘.
-
-완료 후 다음을 확인해줘.
-- endpoint에 필요한 로직만 포함됐는지
-- 다른 API 전용 함수가 섞이지 않았는지
-- yarn tsc --noEmit 통과 여부
-- yarn lint 통과 여부
-- yarn build 통과 여부
-- 생성 또는 수정된 파일 목록
+API 호출은 여러 화면에서 실패할 수 있으니 공통적으로 예외 처리해줘.
+서버에서 내려온 내부 에러 메시지가 사용자 화면에 그대로 보이지 않게 하고,
+별도 페이지 에러 문구가 없는 경우에는 관리자에게 문의하라는 기본 문구가 보이게 해줘.
+다만 페이지마다 별도 에러 처리가 이미 있으면 그 처리를 우선 사용하게 해줘.
 ```
 
-### 4.5 원인과 결과 분석
+#### 활용 의도
 
-#### 원인 1. route 파일은 얇은 컨트롤러 역할로 작성되어 있음
+DB 연결 실패나 서버 오류가 발생했을 때 개발자용 에러 메시지가 그대로 노출되는 문제가 있었습니다. 사용자에게는 비즈니스적으로 정리된 안내 문구가 보이고, 상세 원인은 개발자가 로그에서 확인하는 구조가 더 적절하다고 판단했습니다.
 
-`app/api/carbon-activities/route.ts`와 `app/api/carbon-dashboard/summary/route.ts`는 요청 객체에서 필요한 값만 꺼내 service 함수를 호출하고, 결과를 `Response.json()`으로 반환합니다.
+#### 결과
 
-이런 구조를 얻기 위해서는 프롬프트에서 route 파일에 계산 로직을 직접 넣지 말고 service 계층으로 분리하라고 요청해야 합니다.
+- 공통 API 클라이언트에서 기본 에러 메시지 처리
+- 서버 에러 원문이 사용자 화면에 직접 노출되지 않도록 수정
+- 배출계수 관리, 배출원 카테고리 등 마스터 데이터 페이지의 실패 문구 정리
+- 페이지별 별도 에러 문구가 있으면 해당 문구를 우선 사용하도록 구성
 
-결과적으로 route 파일은 작고 읽기 쉬우며, 오류 처리 방식도 일관되게 유지됩니다.
+### 3.4 DB 기반 데이터와 기본 데이터 처리
 
-#### 원인 2. 활동 목록 조회는 필터링과 페이지네이션이 필요함
-
-`GET /api/carbon-activities`는 단순 목록 반환이 아니라 `startDate`, `endDate`, `scopes`, `rules`, `page`, `pageSize`를 처리합니다.
-
-이 결과를 얻기 위해서는 프롬프트에 기간 필터, Scope 필터, 상세 조건 필터, 페이지네이션을 명시해야 합니다.
-
-결과적으로 `parseActivityQuery`, `filterByBase`, `applyRules`, `evaluateSingleRule`, `listCarbonActivities` 같은 service 함수가 생성됩니다.
-
-#### 원인 3. 업로드 rows 정규화는 배출계수 계산 로직이 필요함
-
-`POST /api/carbon-activities`는 rows 배열을 받아 필수 컬럼을 검증하고, 활동 유형과 단위에 맞는 배출계수를 찾아 탄소 배출량을 계산합니다.
-
-이 결과를 얻기 위해서는 프롬프트에 원본 row 타입, 필수 컬럼 검증, 배출계수 매칭, accepted/rejected 분리 응답을 명시해야 합니다.
-
-결과적으로 `SourceActivityRow`, `EmissionFactor`, `calculateCarbonActivity`, `resolveEmissionFactor`, `normalizeImportedRows` 같은 타입과 함수가 생성됩니다.
-
-#### 원인 4. 대시보드 요약은 활동 목록 데이터를 재사용함
-
-`GET /api/carbon-dashboard/summary`는 별도의 원천 데이터를 만들지 않고, 활동 목록 데이터를 기준으로 요약 값을 계산합니다.
-
-이 결과를 얻기 위해서는 프롬프트에 기존 활동 데이터 조회 함수를 재사용하고, Scope별 KPI와 월별 배출량을 계산하라고 요청해야 합니다.
-
-결과적으로 `getCarbonDashboardSummary`, `sumByScope`, `buildMonthlyRows`, `CarbonDashboardSummary`, `MonthlyEmissionRow`가 생성됩니다.
-
-#### 원인 5. API 응답 타입을 명확히 분리해야 함
-
-활동 목록 응답과 대시보드 요약 응답은 서로 다른 구조를 가집니다.
-
-이 결과를 얻기 위해서는 프롬프트에 API 응답 타입을 `app/lib/carbon-api.ts`에 정의하라고 요청해야 합니다.
-
-결과적으로 `CarbonActivityPage`, `CarbonDashboardSummary`, `MonthlyEmissionRow`, `CarbonBaseFilters`, `ActivityFilterRule` 같은 타입이 생성됩니다.
-
-### 4.6 코드 생성 결과
-
-분석 대상 코드에서 확인되는 API endpoint는 다음과 같습니다.
+#### 요청 프롬프트 정리본
 
 ```text
-/api/carbon-activities
-/api/carbon-dashboard/summary
+DB가 연결되지 않아도 화면에 기본 데이터가 표시되는 부분을 확인해줘.
+초기 데이터 설정에 필요한 마스터 데이터라면 삭제하지 말고,
+실제 DB에서 데이터를 불러오지 못한 경우에는 기본 데이터를 보여주지 말고
+현재 표시 가능한 활동 데이터가 없다는 업무용 문구나 No Data 표시로 바꿔줘.
 ```
 
-`/api/carbon-activities` 결과는 다음과 같습니다.
+#### 활용 의도
 
-- 활동 목록 조회 API 생성
-- 기간, Scope, 상세 조건 필터 처리
-- 페이지네이션 처리
-- 업로드 원본 rows 정규화 처리
-- 배출계수 매칭 및 배출량 계산 로직 연결
-- route, service, repository, lib 타입 계층 분리
+개발 중에는 샘플 데이터가 편하지만, 실제 서비스 화면에서는 DB 조회 실패와 데이터 없음이 구분되어야 합니다. DB가 비활성화된 상태에서 샘플 데이터가 보이면 사용자가 실제 데이터로 오해할 수 있기 때문에 이 부분을 정리했습니다.
 
-`/api/carbon-dashboard/summary` 결과는 다음과 같습니다.
+#### 결과
 
-- 대시보드 요약 API 생성
-- 기간 및 Scope 필터 재사용
-- Scope별 KPI 합계 계산
-- 12개월 월별 배출량 계산
-- 기존 activity repository 재사용
-- dashboard 응답 타입 분리
+- 활동 데이터 화면에서 fallback 샘플 데이터를 보여주지 않도록 수정
+- 대시보드 문구를 `현재 표시 가능한 활동 데이터가 없습니다.`로 통일
+- 차트 영역은 문구 대신 Ant Design 기반 공용 No Data 컴포넌트 표시
+- 상세 조건 내역 테이블의 No Data 표시 정렬 개선
+- 초기 seed에 필요한 배출계수와 카테고리 마스터 데이터는 유지
 
-### 4.7 검증 결과
+### 3.5 Docker, 환경 변수, 개발 환경 구성
 
-API 코드에 대해 다음 명령을 실행했습니다.
+#### 요청 프롬프트 정리본
+
+```text
+Docker에서 DB 정보를 env 파일에서 가져오도록 수정해줘.
+git pull 이후 yarn install, docker compose up -d 까지만 수동으로 하면
+그 다음부터는 명령어 하나로 Prisma 설정, DB 초기화, seed, 빌드 검증까지 끝나게 해줘.
+마지막에는 yarn dev 또는 yarn start로 바로 화면을 볼 수 있어야 해.
+```
+
+#### 활용 의도
+
+로컬 개발 환경을 매번 수동으로 맞추면 실수가 생기기 쉽습니다. Docker DB 설정, Prisma generate, DB push, seed, build 확인을 하나의 흐름으로 묶어 프로젝트 재현성을 높이고 싶었습니다.
+
+#### 결과
+
+- Docker Compose가 `.env`의 DB 설정을 사용하도록 구성
+- 개발 환경 구성용 명령어 추가
+- Prisma client 생성, DB 연결 대기, schema 반영, carbon master seed, build 검증 흐름 구성
+- README에 로컬 실행 방법을 5단계 이내로 정리
+
+### 3.6 초기 데이터 seed 범위 조정
+
+#### 요청 프롬프트 정리본
+
+```text
+scripts/seed-carbon-master-data.ts는 초기 데이터 설정 스크립트야.
+활동 내역 데이터는 엑셀 업로드로 넣을 예정이므로,
+이 스크립트는 배출계수와 배출원 카테고리만 등록하도록 변경해줘.
+```
+
+#### 활용 의도
+
+활동 내역은 사용자가 업로드하는 업무 데이터이고, 배출계수와 카테고리는 서비스 운영에 필요한 마스터 데이터입니다. 두 데이터를 분리해야 초기 데이터와 실제 사용자 데이터의 경계가 명확해집니다.
+
+#### 결과
+
+- seed 스크립트의 역할을 마스터 데이터 등록으로 제한
+- 배출계수와 배출원 카테고리 초기화 로직 유지
+- 활동 내역은 엑셀 업로드를 통해 생성되는 흐름으로 정리
+
+### 3.7 데이터 모델 검토
+
+#### 요청 프롬프트 정리본
+
+```text
+README에 데이터 반정규화를 선택했는데 Prisma schema와 API 로직을 기준으로 확인해줘
+trade-off 작성한 내용을 확인해줘.
+```
+
+#### 활용 의도
+
+Activity 테이블이 배출계수 값을 어떻게 저장하는지, 배출계수 변경 시 기존 활동 데이터가 어떻게 처리되는지 확인했습니다.
+
+#### 결과
+
+- `Activity`가 `scope`, `type`, `description`, `unit`, `appliedFactor`, `emission`을 저장하는 구조 확인
+- 활동 데이터가 배출계수 테이블을 매번 join해서 계산하는 방식이 아니라, 업로드 시점의 적용 계수와 계산 결과를 저장하는 snapshot 방식임을 확인
+- 배출계수 정정 시 영향을 받는 활동 데이터의 `appliedFactor`, `emission`을 다시 계산하는 로직 확인
+- README의 반정규화 설명을 실제 구현에 맞게 조정
+
+### 3.8 Scope 표시 방식 개선
+
+#### 요청 프롬프트 정리본
+
+```text
+필터 버튼에는 직접배출, 간접배출, 가치사슬로 표시되는데
+차트에는 Scope 1, Scope 2, Scope 3으로 표시되어 초보자는 연결해서 이해하기 어려울 수 있어.
+FilterBarSection 버튼에 Ant Design Tooltip을 추가해서 hover 또는 click 시 스코프 이름을 보여줘.
+코드 스타일에 맞게 Scope 메타 정보도 모듈화해줘.
+```
+
+#### 활용 의도
+
+사용자가 필터와 차트의 Scope 표현을 자연스럽게 연결해서 이해하도록 돕기 위한 개선이었습니다. 같은 의미를 여러 파일에 중복 정의하지 않도록 Scope 메타 정보를 분리하는 것도 함께 요청했습니다.
+
+#### 결과
+
+- Scope label, business label, color 정보를 공용 메타 파일로 분리
+- 필터 버튼에 hover/click Tooltip 추가
+- 차트 Scope 표시와 필터 버튼의 기준 정보를 같은 데이터에서 가져오도록 정리
+- `yarn tsc --noEmit`, `yarn lint`로 검증
+
+### 3.9 README 작성
+
+#### 요청 프롬프트 정리본
+
+```text
+README를 한국어로 작성해줘.
+목차, 프로젝트 개요, 로컬 실행 방법, 기술 스택, 설계 구조,
+기술 선택 이유, ERD, 스키마 다이어그램, 라이브러리 내용을 포함해줘.
+기술 스택은 img.shields.io badge를 사용하고 프론트엔드, 백엔드, 데이터베이스를 분리해서 작성해줘.
+yarn start로 실행할 때 오류 없이 확인할 수 있도록 로컬 실행 방법도 명확히 적어줘.
+```
+
+#### 활용 의도
+
+면접이나 과제 제출 시 코드를 실행하는 사람 입장에서 필요한 정보를 한 문서에서 확인할 수 있도록 정리하기 위해 사용했습니다. 단순 실행 명령뿐 아니라, 왜 이런 구조와 기술을 선택했는지도 함께 설명하도록 요청했습니다.
+
+#### 결과
+
+- 한국어 README 작성
+- 로컬 실행 방법 5단계 이내로 정리
+- 기술 스택을 프론트엔드, 백엔드, 데이터베이스, 개발 도구로 분리
+- Mermaid 기반 ERD와 스키마 다이어그램 추가
+- 데이터 반정규화 선택 이유와 단점, 보완 방향 정리
+- 주요 라이브러리 사용 목적 정리
+
+## 4. AI 답변을 그대로 사용하지 않은 부분
+
+AI가 제안한 내용 중 프로젝트와 맞지 않거나 과하다고 판단한 부분은 다시 조정했습니다.
+
+- 버튼 wave 옵션을 완전히 막는 별도 파일 생성 제안은 과하다고 보고, 실제 사용 코드에서만 제거하는 방식으로 수정
+- DB fallback 데이터는 삭제 여부를 먼저 확인한 뒤, seed에 필요한 마스터 데이터는 유지
+- 문서 내용이 실제 Prisma schema와 API 로직에 맞는지 다시 검증
+
+## 5. 검증 방식
+
+주요 코드 변경 후에는 다음 명령을 사용해 검증했습니다.
 
 ```bash
 yarn tsc --noEmit
@@ -305,13 +240,16 @@ yarn lint
 yarn build
 ```
 
-검증 결과 TypeScript 타입체크, ESLint, Next.js 빌드는 통과했습니다.
+문서 변경만 있는 경우에는 별도 빌드 검증 대신 파일 내용과 링크, 실행 명령 설명이 실제 프로젝트 구조와 맞는지 확인했습니다.
 
-Next.js 빌드 결과 API route는 다음과 같이 확인되었습니다.
+## 6. 문서 정리하며 마치는 글
 
-```text
-/api/carbon-activities
-/api/carbon-dashboard/summary
-```
+이 프로젝트에서 AI는 단순 코드 생성 도구가 아니라 개발 보조 도구로 사용했습니다.
 
-빌드 중 Next.js workspace root 추론 경고와 Recharts 컨테이너 크기 경고가 표시되었지만, 해당 경고는 API 코드의 실패 원인은 아니었습니다.
+도메인을 이해하여 요구사항을 나누고 AI에게 현재 코드 스타일과 제약 조건을 알려준 뒤,
+결과물이 실제 프로젝트에 맞는지 다시 확인했습니다.
+특히 DB 데이터 처리, seed 범위, API 실패 메시지, README의 설계 설명처럼 잘못 작성하면 사용자가 오해할 수 있는 부분은
+AI 답변을 그대로 믿지 않고 코드 기준으로 다시 검토했습니다.
+
+결과적으로 AI를 통해 반복 작업 및 모듈화 구조 정리를 빠르게 진행했고,
+최종 판단은 프로젝트 요구사항과 코드 검증 결과를 기준으로 내렸습니다.

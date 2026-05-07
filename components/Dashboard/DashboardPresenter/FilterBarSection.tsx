@@ -1,9 +1,14 @@
 import React from "react";
 import * as S from "@/components/Dashboard/styles";
 import { Button, RangePicker } from "@/components/common/styles";
+import { Tooltip } from "antd";
 import dayjs from "dayjs";
 import type { CarbonBaseFilters } from "@/app/lib/carbon-api";
 import type { CarbonScope } from "@/app/lib/carbon-data";
+import {
+  getScopeTooltipTitle,
+  scopeMetaList,
+} from "@/components/Carbon/scopeMeta";
 
 type FilterBarSectionProps = {
   filters: CarbonBaseFilters;
@@ -11,18 +16,6 @@ type FilterBarSectionProps = {
 };
 
 const dateFormat = "YYYY-MM-DD";
-
-const scopeOptions: { scope: CarbonScope; label: string }[] = [
-  { scope: "scope1", label: "직접배출" },
-  { scope: "scope2", label: "간접배출" },
-  { scope: "scope3", label: "가치사슬" },
-];
-
-const scopeButtonColors: Record<CarbonScope, "scope1" | "scope2" | "scope3"> = {
-  scope1: "scope1",
-  scope2: "scope2",
-  scope3: "scope3",
-};
 
 export default function FilterBarSection({
   filters,
@@ -63,18 +56,21 @@ export default function FilterBarSection({
             />
           </S.FilterWrapper>
           <S.ToggleButtonGroup>
-            {scopeOptions.map((option) => (
-              <Button
-                key={option.scope}
-                customColor={
-                  filters.scopes[option.scope]
-                    ? scopeButtonColors[option.scope]
-                    : "subGray"
-                }
-                onClick={() => handleScopeToggle(option.scope)}
+            {scopeMetaList.map((scope) => (
+              <Tooltip
+                key={scope.key}
+                title={getScopeTooltipTitle(scope.key)}
+                trigger={["hover", "click"]}
               >
-                {option.label}
-              </Button>
+                <Button
+                  customColor={
+                    filters.scopes[scope.key] ? scope.colorKey : "subGray"
+                  }
+                  onClick={() => handleScopeToggle(scope.key)}
+                >
+                  {scope.businessLabel}
+                </Button>
+              </Tooltip>
             ))}
           </S.ToggleButtonGroup>
         </S.FilterGroup>

@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { ChartContainer, ChartTitle } from "../styles";
 import { NoData, Statistic } from "@/components/common/styles";
 import type { MonthlyEmissionRow } from "@/app/lib/carbon-api";
+import { scopeMetaList } from "@/components/Carbon/scopeMeta";
 import {
   Bar,
   CartesianGrid,
@@ -42,26 +43,12 @@ const scopeItems: {
   ratioKey: RatioKey;
   label: string;
   color: string;
-}[] = [
-  {
-    key: "scope1",
-    ratioKey: "scope1Ratio",
-    label: "Scope 1",
-    color: "#ff7a00",
-  },
-  {
-    key: "scope2",
-    ratioKey: "scope2Ratio",
-    label: "Scope 2",
-    color: "#1890ff",
-  },
-  {
-    key: "scope3",
-    ratioKey: "scope3Ratio",
-    label: "Scope 3",
-    color: "#52c41a",
-  },
-];
+}[] = scopeMetaList.map((scope) => ({
+  key: scope.key,
+  ratioKey: `${scope.key}Ratio` as RatioKey,
+  label: scope.name,
+  color: scope.color,
+}));
 
 const ratioToScopeKey: Record<RatioKey, ScopeKey> = {
   scope1Ratio: "scope1",
