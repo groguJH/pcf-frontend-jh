@@ -2,73 +2,264 @@
 
 제품 탄소발자국(PCF) 활동 데이터를 업로드하고, Scope별 배출량을 조회/관리하는 Next.js 기반 대시보드입니다.
 
-## 개발환경 구성
+## 목차
 
-저장소를 pull 받은 뒤 의존성을 설치하고 PostgreSQL 컨테이너를 실행합니다.
+- [프로젝트 개요](#프로젝트-개요)
+- [로컬 실행 방법](#로컬-실행-방법)
+- [기술 스택](#기술-스택)
+- [설계 구조](#설계-구조)
+- [기술 선택 이유](#기술-선택-이유)
+- [ERD 다이어그램](#erd-다이어그램)
+- [스키마 다이어그램](#스키마-다이어그램)
+- [주요 라이브러리](#주요-라이브러리)
+- [주요 명령어](#주요-명령어)
+- [환경 변수](#환경-변수)
+
+## 프로젝트 개요
+
+이 프로젝트는 제품 탄소발자국 관리를 위한 업무형 대시보드입니다.
+활동 데이터는 엑셀 업로드로 등록하고, 배출원 카테고리와 배출계수는 관리자 화면에서 수정/관리합니다.
+
+주요 기능:
+
+- Scope별 월간 배출량 추이 및 비율 대시보드
+- 활동 내역 상세 조건 조회 및 Excel 다운로드
+- 활동 데이터 Excel 업로드 및 업로드 전 검증
+- 배출원 카테고리 관리
+- 배출계수 버전 등록 및 소급 정정
+- 배출계수 변경 시 관련 활동 내역 재계산
+
+## 로컬 실행 방법
+
+아래 순서대로 실행하면 `yarn start`까지 오류 없이 실행할 수 있습니다.
+
+1. 의존성을 설치합니다.
 
 ```bash
 yarn install
+```
+
+2. PostgreSQL 컨테이너를 실행합니다.
+
+```bash
 docker compose up -d
 ```
 
-그 다음 아래 명령어 하나로 로컬 개발환경 구성을 마무리합니다.
+3. 개발환경을 구성합니다.
 
 ```bash
 yarn setup:dev
 ```
 
-`yarn setup:dev`는 다음 작업을 순서대로 실행합니다.
-
-- Prisma client 생성
-- PostgreSQL 접속 대기
-- Prisma schema를 DB에 반영
-- 배출원 카테고리와 배출계수 초기 데이터 등록
-- Next.js 앱 빌드
-
-## 실행
-
-개발 서버 실행:
-
-```bash
-yarn dev
-```
-
-프로덕션 빌드 실행:
+4. 앱을 실행합니다.
 
 ```bash
 yarn start
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)에 접속하면 화면을 확인할 수 있습니다.
+5. 브라우저에서 접속합니다.
 
-## DB 초기 데이터
-
-초기 설정 명령은 활동 내역 데이터를 넣지 않습니다. 활동 내역은 관리자 화면의 엑셀 업로드 기능으로 등록합니다.
-
-초기 설정에 포함되는 데이터:
-
-- 배출원 카테고리
-- 배출계수
-
-초기 데이터만 다시 등록해야 하는 경우:
-
-```bash
-yarn db:seed:carbon
+```text
+http://localhost:3000
 ```
+
+개발 모드로 실행하려면 4단계에서 `yarn dev`를 사용해도 됩니다.
+
+`yarn setup:dev`는 PostgreSQL 접속 대기, Prisma client 생성, DB schema 반영, carbon master data seed, Next.js build를 순서대로 수행합니다.
+
+## 기술 스택
+
+![Next.js](https://img.shields.io/badge/Next.js-16.2.4-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19.2.4-61DAFB?style=for-the-badge&logo=react&logoColor=000000)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Ant Design](https://img.shields.io/badge/Ant%20Design-6.3.7-1677FF?style=for-the-badge&logo=antdesign&logoColor=white)
+![Styled Components](https://img.shields.io/badge/styled--components-6.4.1-DB7093?style=for-the-badge&logo=styledcomponents&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-7.8.0-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Recharts](https://img.shields.io/badge/Recharts-3.8.1-22B5BF?style=for-the-badge)
+![Yarn](https://img.shields.io/badge/Yarn-1.22-2C8EBB?style=for-the-badge&logo=yarn&logoColor=white)
+
+## 설계 구조
+
+```text
+app/
+  page.tsx                         # 메인 대시보드
+  admin/                           # 관리자 화면
+    carbon-activities/import/      # 활동 데이터 Excel 업로드
+    emission-categories/           # 배출원 카테고리 관리
+    emission-factors/              # 배출계수 관리
+  api/                             # Next.js Route Handler API
+    carbon-activities/
+    carbon-dashboard/summary/
+    emission-categories/
+    emission-factors/
+  lib/                             # 클라이언트 공통 타입/유틸
+  server/                          # 서버 전용 서비스와 DB 접근
+
+components/
+  common/                          # 공용 UI 컴포넌트
+  Dashboard/                       # 대시보드 UI
+  DetailSearch/                    # 상세 조건 조회 UI
+  Carbon/                          # 탄소 도메인 UI
+
+prisma/
+  schema.prisma                    # DB schema
+
+scripts/
+  setup-dev.ts                     # 로컬 환경 구성 자동화
+  seed-carbon-master-data.ts       # 카테고리/배출계수 초기 데이터
+```
+
+전체 흐름:
+
+```mermaid
+flowchart LR
+  User[사용자] --> UI[Next.js 화면]
+  UI --> ApiClient[공통 API Client]
+  ApiClient --> API[Route Handler API]
+  API --> Service[서버 서비스]
+  Service --> Repository[Repository]
+  Repository --> Prisma[Prisma Client]
+  Prisma --> DB[(PostgreSQL)]
+
+  Excel[Excel 파일] --> Upload[활동 데이터 업로드 화면]
+  Upload --> Validate[카테고리/배출계수 검증]
+  Validate --> API
+```
+
+## 기술 선택 이유
+
+| 기술               | 사용 이유                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| Next.js App Router | 화면과 API Route Handler를 같은 프로젝트에서 관리해 작은 규모의 풀스택 업무 앱에 적합합니다. |
+| React 19           | 대시보드, 관리자 화면, 업로드 미리보기처럼 상태 기반 UI를 컴포넌트 단위로 구성하기 좋습니다. |
+| TypeScript         | API 응답, 업로드 row, 필터 조건, DB 모델 매핑의 타입 안정성을 확보합니다.                    |
+| Ant Design         | 테이블, 모달, 폼, 업로드, 메시지 등 관리자성 UI를 빠르게 일관된 형태로 구성할 수 있습니다.   |
+| styled-components  | 공용 컴포넌트와 도메인별 화면 스타일을 가까운 위치에서 관리합니다.                           |
+| Prisma             | PostgreSQL schema와 타입 안전한 DB 접근 코드를 함께 관리할 수 있습니다.                      |
+| PostgreSQL         | 활동 내역, 배출계수 이력, 카테고리 관계처럼 정형 데이터를 안정적으로 저장합니다.             |
+| Recharts           | 월별 Scope 배출량과 비율을 React 컴포넌트 방식으로 시각화하기 쉽습니다.                      |
+| xlsx               | 브라우저에서 Excel/CSV 파일을 파싱하고 내보내는 기능에 사용합니다.                           |
+| Docker Compose     | 로컬 PostgreSQL 환경을 동일한 설정으로 재현합니다.                                           |
+
+## ERD 다이어그램
+
+```mermaid
+erDiagram
+  EMISSION_CATEGORIES ||--o{ ACTIVITIES : "type, scope"
+
+  EMISSION_CATEGORIES {
+    varchar type PK
+    varchar scope PK
+  }
+
+  EMISSION_FACTORS {
+    int id PK
+    varchar type
+    varchar description
+    varchar unit
+    decimal factor_value
+    date valid_from
+    date valid_to
+  }
+
+  ACTIVITIES {
+    int id PK
+    date activity_date
+    varchar scope FK
+    varchar type FK
+    varchar description
+    decimal amount
+    varchar unit
+    decimal applied_factor
+    decimal emission
+  }
+```
+
+참고:
+
+- `activities.type + activities.scope`는 `emission_categories.type + emission_categories.scope`를 참조합니다.
+- `emission_factors`는 활동 데이터 업로드와 배출량 재계산 시 `type`, `description`, `unit`, `valid_from`, `valid_to` 조건으로 논리 매칭합니다.
+- 활동 내역은 계산 시점의 배출계수를 `applied_factor`로 스냅샷 저장합니다.
+
+## 스키마 다이어그램
+
+```mermaid
+classDiagram
+  class EmissionCategory {
+    +String type
+    +String scope
+    +Activity[] activities
+  }
+
+  class EmissionFactor {
+    +Int id
+    +String type
+    +String description
+    +String unit
+    +Decimal factorValue
+    +DateTime validFrom
+    +DateTime? validTo
+  }
+
+  class Activity {
+    +Int id
+    +DateTime activityDate
+    +String scope
+    +String type
+    +String description
+    +Decimal amount
+    +String unit
+    +Decimal appliedFactor
+    +Decimal emission
+  }
+
+  EmissionCategory "1" --> "0..*" Activity : category
+```
+
+DB 테이블 매핑:
+
+| Prisma Model       | DB Table              | 설명                                     |
+| ------------------ | --------------------- | ---------------------------------------- |
+| `EmissionCategory` | `emission_categories` | 배출원 유형과 Scope 분류 마스터          |
+| `EmissionFactor`   | `emission_factors`    | 배출원/상세내역/단위/유효기간별 배출계수 |
+| `Activity`         | `activities`          | 업로드된 활동 내역과 계산 결과           |
+
+## 주요 라이브러리
+
+| 라이브러리                     | 용도                                                           |
+| ------------------------------ | -------------------------------------------------------------- |
+| `next`                         | App Router, page routing, API Route Handler                    |
+| `react`, `react-dom`           | 화면 컴포넌트 렌더링                                           |
+| `antd`                         | Table, Modal, Button, Upload, DatePicker, Empty 등 UI 컴포넌트 |
+| `@ant-design/icons`            | 버튼과 메뉴 아이콘                                             |
+| `@ant-design/nextjs-registry`  | Next.js 환경에서 Ant Design style registry 처리                |
+| `styled-components`            | 공용 스타일 컴포넌트와 화면별 스타일                           |
+| `recharts`                     | 월별 배출량 차트                                               |
+| `xlsx`                         | Excel/CSV 업로드 파싱 및 Excel 다운로드                        |
+| `dayjs`                        | 날짜 선택/포맷 처리                                            |
+| `prisma`, `@prisma/client`     | DB schema 관리와 Prisma Client 생성                            |
+| `@prisma/adapter-pg`, `pg`     | Prisma PostgreSQL adapter 및 DB 접속                           |
+| `tsx`                          | TypeScript 기반 setup/seed 스크립트 실행                       |
+| `dotenv`                       | `.env` 환경 변수 로딩                                          |
+| `eslint`, `eslint-config-next` | 코드 정적 검사                                                 |
 
 ## 주요 명령어
 
-```bash
-yarn lint
-yarn tsc --noEmit
-yarn build
-```
+| 명령어                | 설명                                                 |
+| --------------------- | ---------------------------------------------------- |
+| `yarn setup:dev`      | 로컬 DB 대기, Prisma 생성/반영, seed, build까지 수행 |
+| `yarn dev`            | 개발 서버 실행                                       |
+| `yarn start`          | 빌드된 앱 실행                                       |
+| `yarn build`          | Next.js 프로덕션 빌드                                |
+| `yarn lint`           | ESLint 검사                                          |
+| `yarn tsc --noEmit`   | TypeScript 타입 검사                                 |
+| `yarn db:seed:carbon` | 배출원 카테고리와 배출계수 초기 데이터 등록          |
 
 ## 환경 변수
 
 DB 접속 정보는 `.env`에서 관리합니다. Docker Compose와 애플리케이션이 같은 값을 사용합니다.
-
-필요한 주요 값:
 
 ```env
 DB_USER="myuser"
@@ -77,3 +268,14 @@ DB_NAME="pcf_db"
 DB_PORT="5432"
 DATABASE_URL="postgresql://myuser:mypassword@localhost:5432/pcf_db?schema=public"
 ```
+
+## 초기 데이터 정책
+
+`yarn setup:dev`와 `yarn db:seed:carbon`은 활동 내역 데이터를 넣지 않습니다.
+
+초기 등록 대상:
+
+- 배출원 카테고리
+- 배출계수
+
+활동 내역은 관리자 화면의 Excel 업로드 기능으로 등록합니다.
