@@ -36,6 +36,9 @@ const MessageText = styled.p<{ $type?: "error" | "success" }>`
   color: ${({ $type }) => ($type === "error" ? "#ff4d4f" : "#52c41a")};
 `;
 
+const LOAD_CATEGORIES_ERROR_MESSAGE =
+  "배출원 카테고리 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.";
+
 function getCategoryKey(category: EmissionCategory) {
   return `${category.type}-${category.scope}`;
 }
@@ -65,24 +68,22 @@ export default function EmissionCategoriesPage() {
 
     try {
       const response = await fetch("/api/emission-categories");
-      const body = (await response.json()) as {
-        categories?: EmissionCategory[];
-        error?: string;
-      };
 
       if (!response.ok) {
-        throw new Error(body.error ?? "카테고리 목록을 불러올 수 없습니다.");
+        throw new Error("Failed to load emission categories.");
       }
+
+      const body = (await response.json()) as {
+        categories?: EmissionCategory[];
+      };
 
       setCategories(body.categories ?? []);
     } catch (error) {
+      console.error(error);
       setCategories([]);
       setMessage({
         type: "error",
-        text:
-          error instanceof Error
-            ? error.message
-            : "카테고리 목록을 불러올 수 없습니다.",
+        text: LOAD_CATEGORIES_ERROR_MESSAGE,
       });
     } finally {
       setIsLoading(false);

@@ -32,6 +32,9 @@ const MessageText = styled.p<{ $type?: "error" | "success" }>`
   color: ${({ $type }) => ($type === "error" ? "#ff4d4f" : "#52c41a")};
 `;
 
+const LOAD_FACTORS_ERROR_MESSAGE =
+  "배출계수 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.";
+
 function formatNumber(value: number) {
   return value.toLocaleString("ko-KR", {
     maximumFractionDigits: 8,
@@ -72,24 +75,22 @@ export default function EmissionFactorsPage() {
 
     try {
       const response = await fetch("/api/emission-factors");
-      const body = (await response.json()) as {
-        factors?: EmissionFactor[];
-        error?: string;
-      };
 
       if (!response.ok) {
-        throw new Error(body.error ?? "배출계수 목록을 불러올 수 없습니다.");
+        throw new Error("Failed to load emission factors.");
       }
+
+      const body = (await response.json()) as {
+        factors?: EmissionFactor[];
+      };
 
       setFactors(body.factors ?? []);
     } catch (error) {
+      console.error(error);
       setFactors([]);
       setMessage({
         type: "error",
-        text:
-          error instanceof Error
-            ? error.message
-            : "배출계수 목록을 불러올 수 없습니다.",
+        text: LOAD_FACTORS_ERROR_MESSAGE,
       });
     } finally {
       setIsLoading(false);
