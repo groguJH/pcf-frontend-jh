@@ -1,19 +1,9 @@
-import {
-  getCarbonActivities,
-  type CarbonActivity,
-  type CarbonScope,
-} from "@/app/lib/carbon-data";
+import { type CarbonActivity, type CarbonScope } from "@/app/lib/carbon-data";
 import { getPrismaClient } from "@/app/server/db/prisma";
 
 export type CarbonActivityRepository = {
   listActivities(): Promise<CarbonActivity[]>;
 };
-
-class InMemoryCarbonActivityRepository implements CarbonActivityRepository {
-  async listActivities() {
-    return getCarbonActivities();
-  }
-}
 
 function formatDate(value: Date | string) {
   if (typeof value === "string") {
@@ -69,13 +59,8 @@ class PrismaCarbonActivityRepository implements CarbonActivityRepository {
   }
 }
 
-const memoryRepository = new InMemoryCarbonActivityRepository();
 const prismaRepository = new PrismaCarbonActivityRepository();
 
 export function getCarbonActivityRepository(): CarbonActivityRepository {
-  if (process.env.CARBON_REPOSITORY === "prisma") {
-    return prismaRepository;
-  }
-
-  return memoryRepository;
+  return prismaRepository;
 }

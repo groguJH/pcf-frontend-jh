@@ -3,19 +3,9 @@ import { getPrismaClient } from "@/app/server/db/prisma";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type EmissionFactor = {
-  id: number;
-  type: string;
-  description: string;
-  unit: string;
-  factorValue: number;
-  validFrom: string;
-  validTo: string | null;
-};
-
 type FactorChangeType = "correction" | "revision";
 
-type SerializableFactor = EmissionFactor | {
+type SerializableFactor = {
   id: number;
   type: string;
   description: string;
@@ -54,58 +44,6 @@ class RequestError extends Error {
   }
 }
 
-const memoryFactors: EmissionFactor[] = [
-  {
-    id: 1,
-    type: "전기",
-    description: "한국전력",
-    unit: "kWh",
-    factorValue: 0.456,
-    validFrom: "2025-01-01",
-    validTo: null,
-  },
-  {
-    id: 2,
-    type: "원소재",
-    description: "플라스틱 1",
-    unit: "kg",
-    factorValue: 2.3,
-    validFrom: "2025-01-01",
-    validTo: null,
-  },
-  {
-    id: 3,
-    type: "원소재",
-    description: "플라스틱 2",
-    unit: "kg",
-    factorValue: 3.2,
-    validFrom: "2025-01-01",
-    validTo: null,
-  },
-  {
-    id: 4,
-    type: "운송",
-    description: "트럭",
-    unit: "ton-km",
-    factorValue: 3.5,
-    validFrom: "2025-01-01",
-    validTo: null,
-  },
-];
-
-function shouldUseMemoryRepository() {
-  return process.env.CARBON_REPOSITORY !== "prisma";
-}
-
-function sortFactors(factors: EmissionFactor[]) {
-  return [...factors].sort((a, b) =>
-    `${a.type}-${a.description}-${a.unit}-${a.validFrom}`.localeCompare(
-      `${b.type}-${b.description}-${b.unit}-${b.validFrom}`,
-      "ko-KR",
-    ),
-  );
-}
-
 function parseDate(value: unknown) {
   if (typeof value !== "string" || value.trim() === "") {
     return null;
@@ -121,10 +59,6 @@ function formatDate(value: Date | string) {
   }
 
   return value.toISOString().slice(0, 10);
-}
-
-function getNextMemoryId() {
-  return Math.max(0, ...memoryFactors.map((factor) => factor.id)) + 1;
 }
 
 function serializeFactor<T extends SerializableFactor>(factor: T) {
@@ -332,10 +266,6 @@ function getErrorStatus(error: unknown) {
  */
 export async function GET() {
   try {
-    if (shouldUseMemoryRepository()) {
-      return Response.json({ factors: sortFactors(memoryFactors) });
-    }
-
     const prisma = getPrismaClient();
     const rows = await prisma.emissionFactor.findMany({
       orderBy: [
@@ -410,22 +340,6 @@ export async function POST(request: Request) {
         { error: "유효 종료일은 유효 시작일 이후로 입력해주세요." },
         { status: 400 },
       );
-    }
-
-    if (shouldUseMemoryRepository()) {
-      const factor = {
-        id: getNextMemoryId(),
-        type,
-        description,
-        unit,
-        factorValue,
-        validFrom: formatDate(validFrom),
-        validTo: validTo ? formatDate(validTo) : null,
-      };
-
-      memoryFactors.push(factor);
-
-      return Response.json({ factor }, { status: 201 });
     }
 
     const prisma = getPrismaClient();
@@ -506,115 +420,6 @@ export async function PATCH(request: Request) {
         { error: "유효 종료일은 유효 시작일 이후로 입력해주세요." },
         { status: 400 },
       );
-    }
-
-    if (shouldUseMemoryRepository()) {
-      const factorIndex = memoryFactors.findIndex((factor) => factor.id === id);
-
-      if (factorIndex < 0) {
-        return Response.json(
-          { error: "수정할 배출계수를 찾을 수 없습니다." },
-          { status: 404 },
-        );
-      }
-
-      const previousFactor = memoryFactors[factorIndex];
-
-      if (changeType === "revision") {
-        const previousValidFrom = parseDate(previousFactor.validFrom);
-        const previousValidTo = parseDate(previousFactor.validTo);
-
-        if (
-          !previousValidFrom ||
-          validFrom.getTime() <= previousValidFrom.getTime()
-        ) {
-          return Response.json(
-            {
-              error:
-                "새 버전의 유효 시작일은 선택한 배출계수의 시작일 이후여야 합니다.",
-            },
-            { status: 400 },
-          );
-        }
-
-        if (
-          previousValidTo &&
-          validFrom.getTime() > previousValidTo.getTime()
-        ) {
-          return Response.json(
-            {
-              error:
-                "새 버전의 유효 시작일은 선택한 배출계수의 유효기간 안에 있어야 합니다.",
-            },
-            { status: 400 },
-          );
-        }
-
-        const updatedPreviousFactor = {
-          ...previousFactor,
-          validTo: formatDate(addDays(validFrom, -1)),
-        };
-        const factor = {
-          id: getNextMemoryId(),
-          type,
-          description,
-          unit,
-          factorValue,
-          validFrom: formatDate(validFrom),
-          validTo: previousFactor.validTo,
-        };
-
-        memoryFactors[factorIndex] = updatedPreviousFactor;
-        memoryFactors.push(factor);
-
-        return Response.json({
-          changeType,
-          factor,
-          previousFactor: updatedPreviousFactor,
-          recalculatedActivities: 0,
-        });
-      }
-
-      const factorPeriods = memoryFactors
-        .filter(
-          (factor) =>
-            factor.type === previousFactor.type &&
-            factor.description === previousFactor.description &&
-            factor.unit === previousFactor.unit,
-        )
-        .map(toFactorPeriod);
-      const correctedSeries = prepareCorrectedFactorSeries(factorPeriods, id, {
-        type,
-        description,
-        unit,
-        factorValue,
-        validFrom,
-        validTo,
-      });
-
-      for (const factor of [
-        correctedSeries.previousFactor,
-        correctedSeries.targetFactor,
-        correctedSeries.nextFactor,
-      ]) {
-        if (!factor) {
-          continue;
-        }
-
-        const targetIndex = memoryFactors.findIndex(
-          (memoryFactor) => memoryFactor.id === factor.id,
-        );
-
-        if (targetIndex >= 0) {
-          memoryFactors[targetIndex] = serializeFactor(factor);
-        }
-      }
-
-      return Response.json({
-        changeType,
-        factor: serializeFactor(correctedSeries.targetFactor),
-        recalculatedActivities: 0,
-      });
     }
 
     const prisma = getPrismaClient();
