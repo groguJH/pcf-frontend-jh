@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "setup:dev": "tsx scripts/setup-dev.ts",
     "db:seed:carbon": "tsx scripts/seed-carbon-master-data.ts"
   },
   "dependencies": {
