@@ -4,13 +4,14 @@ import { emissionFactors } from "@/app/lib/carbon-data";
 import { getPrismaClient } from "@/app/server/db/prisma";
 
 type CarbonScope = "scope1" | "scope2" | "scope3";
+type EmissionCategorySeed = { type: string; scope: CarbonScope };
 
 function parseDate(value: string) {
   return new Date(`${value}T00:00:00.000Z`);
 }
 
 function getCategorySeeds() {
-  const categoryMap = new Map<string, { type: string; scope: CarbonScope }>();
+  const categoryMap = new Map<string, EmissionCategorySeed>();
 
   for (const factor of emissionFactors) {
     categoryMap.set(`${factor.activityType}:${factor.scope}`, {
@@ -24,9 +25,10 @@ function getCategorySeeds() {
   );
 }
 
-async function seedCarbonMasterData() {
+async function seedEmissionCategoryMasters(
+  categories: EmissionCategorySeed[],
+) {
   const prisma = getPrismaClient();
-  const categories = getCategorySeeds();
 
   for (const category of categories) {
     await prisma.emissionCategory.upsert({
@@ -40,6 +42,10 @@ async function seedCarbonMasterData() {
       create: category,
     });
   }
+}
+
+async function seedEmissionFactorMasters() {
+  const prisma = getPrismaClient();
 
   for (const factor of emissionFactors) {
     const description = factor.descriptionMatcher ?? factor.activityType;
@@ -69,6 +75,13 @@ async function seedCarbonMasterData() {
       },
     });
   }
+}
+
+async function seedCarbonMasterData() {
+  const categories = getCategorySeeds();
+
+  await seedEmissionCategoryMasters(categories);
+  await seedEmissionFactorMasters();
 
   return {
     categoryCount: categories.length,
@@ -83,7 +96,7 @@ async function main() {
     const result = await seedCarbonMasterData();
 
     console.log(
-      `Carbon master data seeded. categories=${result.categoryCount}, factors=${result.factorCount}`,
+      `Carbon master data seeded. emissionCategories=${result.categoryCount}, emissionFactors=${result.factorCount}. activities are loaded through Excel upload.`,
     );
   } finally {
     await prisma.$disconnect();
