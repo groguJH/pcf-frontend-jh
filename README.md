@@ -1,6 +1,6 @@
 # PCF Carbon Dashboard
 
-<img width="700" height="auto" alt="홈화면" src="https://github.com/user-attachments/assets/288dd5b0-d086-4fc5-a958-8c599e0f829c" />
+<img width="650" height="auto" alt="홈화면" src="https://github.com/user-attachments/assets/288dd5b0-d086-4fc5-a958-8c599e0f829c" />
 <br/>
 제품 탄소발자국(PCF) 활동 데이터를 업로드하고, Scope별 배출량을 조회/관리하는 Next.js 기반 대시보드입니다.
 
@@ -24,6 +24,12 @@
 - 모바일 환경에도 대응할 수 있도록 주로 레이아웃은 반응형으로 작성했으며
   미디어쿼리를 적용했습니다. 데이터 테이블은 컬럼수가 많아 모바일에서는 고정레이아웃과 말줄임처리를 적용했습니다.
 - 활동 데이터는 엑셀 업로드로 등록하고, 배출원 카테고리와 배출계수는 관리자 화면에서 수정/관리합니다.
+
+<br/>
+
+<img width="650" height="auto" alt="반응형 홈화면" src="https://github.com/user-attachments/assets/2cc3ab29-f9be-45d1-9a16-ef76ecbf84b3" />
+
+<br/>
 
 주요 기능:
 
