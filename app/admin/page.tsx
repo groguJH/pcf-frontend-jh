@@ -18,7 +18,13 @@ import {
 
 const adminLinks = [
   {
-    title: "배출원 카테고리",
+    title: "활동 데이터 업로드",
+    description: "엑셀 활동 데이터를 미리 확인한 뒤 DB에 업로드합니다.",
+    href: "/admin/carbon-activities/import",
+    icon: <CloudUploadOutlined />,
+  },
+  {
+    title: "배출원 카테고리 관리",
     description: "배출원 유형별 Scope 분류를 등록하고 수정합니다.",
     href: "/admin/emission-categories",
     icon: <AppstoreOutlined />,
@@ -28,12 +34,6 @@ const adminLinks = [
     description: "배출원별 단위와 유효기간에 따른 배출계수를 관리합니다.",
     href: "/admin/emission-factors",
     icon: <CalculatorOutlined />,
-  },
-  {
-    title: "활동 데이터 업로드",
-    description: "엑셀 활동 데이터를 미리 확인한 뒤 DB에 업로드합니다.",
-    href: "/admin/carbon-activities/import",
-    icon: <CloudUploadOutlined />,
   },
 ];
 
