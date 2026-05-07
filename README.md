@@ -30,6 +30,7 @@
 <img width="650" height="auto" alt="반응형 홈화면" src="https://github.com/user-attachments/assets/2cc3ab29-f9be-45d1-9a16-ef76ecbf84b3" />
 
 <br/>
+<br/>
 
 주요 기능:
 
