@@ -1,6 +1,8 @@
 # PCF Carbon Dashboard
 
 제품 탄소발자국(PCF) 활동 데이터를 업로드하고, Scope별 배출량을 조회/관리하는 Next.js 기반 대시보드입니다.
+<img width="995" height="799" alt="홈화면" src="https://github.com/user-attachments/assets/288dd5b0-d086-4fc5-a958-8c599e0f829c" />
+
 
 ## 목차
 
@@ -31,6 +33,8 @@
 - 배출원 카테고리 관리
 - 배출계수 버전 등록 및 소급 정정
 - 배출계수 변경 시 관련 활동 내역 재계산
+
+
 
 ## 로컬 실행 방법
 
