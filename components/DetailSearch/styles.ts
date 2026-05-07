@@ -22,6 +22,10 @@ export const DetailSearchWrapper = styled(SurfaceSection)`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  .ant-table-tbody > tr.ant-table-placeholder > td {
+    text-align: center !important;
+  }
 `;
 
 export const SearchHeader = styled(SectionHeader)``;

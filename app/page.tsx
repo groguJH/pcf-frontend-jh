@@ -103,6 +103,7 @@ export default function HomePage() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const baseQuery = useMemo(() => buildBaseQuery(filters), [filters]);
+  const hasDashboardData = (summary?.rowsMatched ?? 0) > 0;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -263,7 +264,10 @@ export default function HomePage() {
       <FilterBarSection filters={filters} onChange={handleFilterChange} />
 
       {/* Scope 비율 및 총량 추세 차트 */}
-      <MonthlyChartSection rows={summary?.monthly ?? []} />
+      <MonthlyChartSection
+        rows={summary?.monthly ?? []}
+        hasData={hasDashboardData}
+      />
 
       {/* 페이지네이션 및 테이블 */}
       <SearchTable

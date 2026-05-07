@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { Pagination } from "antd";
 import styled from "styled-components";
+import { NoData } from "../NoData/noData";
 import { Select } from "../SelectBox/selectBox";
 import { Table } from "../Table/table";
 import type { TableProps } from "../Table/table";
@@ -138,6 +139,10 @@ export function DataTable({
   const handlePageSizeChange = (nextPageSize: unknown) => {
     handlePageChange(1, Number(nextPageSize));
   };
+  const locale = {
+    ...tableProps.locale,
+    emptyText: tableProps.locale?.emptyText ?? <NoData />,
+  };
 
   return (
     <>
@@ -163,7 +168,12 @@ export function DataTable({
         </TableTopBar>
       ) : null}
 
-      <Table {...tableProps} dataSource={tableRows} pagination={false} />
+      <Table
+        {...tableProps}
+        dataSource={tableRows}
+        locale={locale}
+        pagination={false}
+      />
 
       {pagination !== false ? (
         <TableFooter>

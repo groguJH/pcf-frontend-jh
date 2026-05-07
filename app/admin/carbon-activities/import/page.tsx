@@ -1046,7 +1046,6 @@ export default function CarbonActivitiesImportPage() {
           onRow={(row) => ({
             onClick: () => openEditRowModal(row as PreviewActivityRow),
           })}
-          locale={{ emptyText: "미리보기 데이터가 없습니다." }}
         />
 
         <ManualActivityRowModal

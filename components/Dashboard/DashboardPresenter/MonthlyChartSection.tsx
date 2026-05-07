@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { ChartContainer, ChartTitle } from "../styles";
-import { Statistic } from "@/components/common/styles";
+import { NoData, Statistic } from "@/components/common/styles";
 import type { MonthlyEmissionRow } from "@/app/lib/carbon-api";
 import {
   Bar,
@@ -19,6 +19,7 @@ import {
 
 type MonthlyChartSectionProps = {
   rows: MonthlyEmissionRow[];
+  hasData?: boolean;
 };
 
 type ScopeKey = "scope1" | "scope2" | "scope3";
@@ -121,6 +122,18 @@ const ChartFrame = styled.div`
   min-height: 25rem;
 `;
 
+const NoDataChartState = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 0.1rem dashed #d9dee3;
+  border-radius: 0.8rem;
+  background: #f8f9fa;
+  padding: 2rem;
+`;
+
 function getRatio(value: number, total: number) {
   if (total <= 0) {
     return 0;
@@ -179,6 +192,7 @@ function formatTooltipValue(
 
 export default function MonthlyChartSection({
   rows,
+  hasData = rows.some((row) => row.total > 0),
 }: MonthlyChartSectionProps) {
   const [isMounted, setIsMounted] = useState(false);
   const data = useMemo(() => buildChartRows(rows), [rows]);
@@ -236,7 +250,11 @@ export default function MonthlyChartSection({
       </HeaderRow>
 
       <ChartFrame>
-        {isMounted ? (
+        {!hasData ? (
+          <NoDataChartState>
+            <NoData />
+          </NoDataChartState>
+        ) : isMounted ? (
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={data}
