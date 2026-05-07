@@ -13,6 +13,7 @@ import {
   type CarbonBaseFilters,
   type CarbonDashboardSummary,
 } from "@/app/lib/carbon-api";
+import { fetchJson } from "@/app/lib/api-client";
 
 function buildBaseQuery(filters: CarbonBaseFilters) {
   const params = new URLSearchParams({
@@ -110,18 +111,17 @@ export default function HomePage() {
 
     async function loadSummary() {
       try {
-        const response = await fetch(
+        const dashboardSummary = await fetchJson<CarbonDashboardSummary>(
           `/api/carbon-dashboard/summary?${baseQuery.toString()}`,
           {
             signal: controller.signal,
           },
+          {
+            errorMessage: "대시보드 요약을 불러올 수 없습니다.",
+          },
         );
 
-        if (!response.ok) {
-          throw new Error("대시보드 요약을 불러올 수 없습니다.");
-        }
-
-        setSummary((await response.json()) as CarbonDashboardSummary);
+        setSummary(dashboardSummary);
       } catch (error) {
         if (!controller.signal.aborted) {
           console.error(error);
@@ -148,15 +148,17 @@ export default function HomePage() {
       setIsActivitiesLoading(true);
 
       try {
-        const response = await fetch(`/api/carbon-activities?${params}`, {
-          signal: controller.signal,
-        });
+        const activityPage = await fetchJson<CarbonActivityPage>(
+          `/api/carbon-activities?${params}`,
+          {
+            signal: controller.signal,
+          },
+          {
+            errorMessage: "활동 내역을 불러올 수 없습니다.",
+          },
+        );
 
-        if (!response.ok) {
-          throw new Error("활동 내역을 불러올 수 없습니다.");
-        }
-
-        setActivities((await response.json()) as CarbonActivityPage);
+        setActivities(activityPage);
       } catch (error) {
         if (!controller.signal.aborted) {
           console.error(error);
@@ -198,13 +200,13 @@ export default function HomePage() {
         1,
         ACTIVITY_EXPORT_PAGE_SIZE,
       );
-      const firstResponse = await fetch(`/api/carbon-activities?${firstParams}`);
-
-      if (!firstResponse.ok) {
-        throw new Error("활동 내역을 다운로드할 수 없습니다.");
-      }
-
-      const firstPage = (await firstResponse.json()) as CarbonActivityPage;
+      const firstPage = await fetchJson<CarbonActivityPage>(
+        `/api/carbon-activities?${firstParams}`,
+        undefined,
+        {
+          errorMessage: "활동 내역을 다운로드할 수 없습니다.",
+        },
+      );
       const rows = [...firstPage.rows];
 
       for (
@@ -218,13 +220,13 @@ export default function HomePage() {
           nextPage,
           ACTIVITY_EXPORT_PAGE_SIZE,
         );
-        const response = await fetch(`/api/carbon-activities?${params}`);
-
-        if (!response.ok) {
-          throw new Error("활동 내역을 다운로드할 수 없습니다.");
-        }
-
-        const activityPage = (await response.json()) as CarbonActivityPage;
+        const activityPage = await fetchJson<CarbonActivityPage>(
+          `/api/carbon-activities?${params}`,
+          undefined,
+          {
+            errorMessage: "활동 내역을 다운로드할 수 없습니다.",
+          },
+        );
         rows.push(...activityPage.rows);
       }
 

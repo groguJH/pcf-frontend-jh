@@ -12,6 +12,7 @@ import {
 import { Popconfirm } from "antd";
 import * as XLSX from "xlsx";
 import styled from "styled-components";
+import { fetchJson } from "@/app/lib/api-client";
 import { ScopeTag } from "@/components/Carbon/ScopeTag";
 import {
   Button,
@@ -482,26 +483,21 @@ function parseWorkbook(workbook: XLSX.WorkBook) {
   throw new Error(`엑셀 파일에서 필수 컬럼을 찾을 수 없습니다: ${requiredHeaderText}`);
 }
 
-async function fetchJson<T>(url: string, fallbackErrorMessage: string) {
-  const response = await fetch(url);
-  const body = (await response.json()) as T & { error?: string };
-
-  if (!response.ok) {
-    throw new Error(body.error ?? fallbackErrorMessage);
-  }
-
-  return body;
-}
-
 async function loadValidationMasters(): Promise<ValidationMasters> {
   const [categoryBody, factorBody] = await Promise.all([
     fetchJson<{ categories?: EmissionCategory[] }>(
       "/api/emission-categories",
-      "배출원 카테고리 목록을 불러올 수 없습니다.",
+      undefined,
+      {
+        errorMessage: "배출원 카테고리 목록을 불러올 수 없습니다.",
+      },
     ),
     fetchJson<{ factors?: EmissionFactor[] }>(
       "/api/emission-factors",
-      "배출계수 목록을 불러올 수 없습니다.",
+      undefined,
+      {
+        errorMessage: "배출계수 목록을 불러올 수 없습니다.",
+      },
     ),
   ]);
 
@@ -802,34 +798,34 @@ export default function CarbonActivitiesImportPage() {
     setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/carbon-activities/import", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          rows: preview.rows.map((row) => ({
-            activityDate: row.activityDate,
-            scope: row.scope,
-            type: row.type,
-            description: row.description,
-            amount: row.amount,
-            unit: row.unit,
-            appliedFactor: row.appliedFactor,
-            sourceSheet: row.sheetName,
-            sourceRowNumber: row.rowNumber,
-            productName: "업로드 데이터",
-          })),
-        }),
-      });
-      const body = (await response.json()) as {
+      const body = await fetchJson<{
         count?: number;
-        error?: string;
-      };
-
-      if (!response.ok) {
-        throw new Error(body.error ?? "활동 데이터를 업로드할 수 없습니다.");
-      }
+      }>(
+        "/api/carbon-activities/import",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            rows: preview.rows.map((row) => ({
+              activityDate: row.activityDate,
+              scope: row.scope,
+              type: row.type,
+              description: row.description,
+              amount: row.amount,
+              unit: row.unit,
+              appliedFactor: row.appliedFactor,
+              sourceSheet: row.sheetName,
+              sourceRowNumber: row.rowNumber,
+              productName: "업로드 데이터",
+            })),
+          }),
+        },
+        {
+          errorMessage: "활동 데이터를 업로드할 수 없습니다.",
+        },
+      );
 
       setStatusMessage({
         type: "success",

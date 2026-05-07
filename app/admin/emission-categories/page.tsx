@@ -12,6 +12,7 @@ import {
   SurfaceSection,
   TitleGroup,
 } from "@/components/common/styles";
+import { fetchJson } from "@/app/lib/api-client";
 import { ScopeTag } from "@/components/Carbon/ScopeTag";
 import EmissionCategoryModal, {
   type CategoryForm,
@@ -67,15 +68,11 @@ export default function EmissionCategoriesPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/emission-categories");
-
-      if (!response.ok) {
-        throw new Error("Failed to load emission categories.");
-      }
-
-      const body = (await response.json()) as {
+      const body = await fetchJson<{
         categories?: EmissionCategory[];
-      };
+      }>("/api/emission-categories", undefined, {
+        errorMessage: LOAD_CATEGORIES_ERROR_MESSAGE,
+      });
 
       setCategories(body.categories ?? []);
     } catch (error) {
@@ -138,30 +135,31 @@ export default function EmissionCategoriesPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/emission-categories", {
-        method: editingCategory ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
+      await fetchJson(
+        "/api/emission-categories",
+        {
+          method: editingCategory ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(
+            editingCategory
+              ? {
+                  originalType: editingCategory.type,
+                  originalScope: editingCategory.scope,
+                  type,
+                  scope: form.scope,
+                }
+              : {
+                  type,
+                  scope: form.scope,
+                },
+          ),
         },
-        body: JSON.stringify(
-          editingCategory
-            ? {
-                originalType: editingCategory.type,
-                originalScope: editingCategory.scope,
-                type,
-                scope: form.scope,
-              }
-            : {
-                type,
-                scope: form.scope,
-              },
-        ),
-      });
-      const body = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
-        throw new Error(body.error ?? "카테고리를 저장할 수 없습니다.");
-      }
+        {
+          errorMessage: "카테고리를 저장할 수 없습니다.",
+        },
+      );
 
       setIsModalOpen(false);
       setEditingCategory(null);
@@ -191,18 +189,19 @@ export default function EmissionCategoriesPage() {
       setMessage(null);
 
       try {
-        const response = await fetch("/api/emission-categories", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
+        await fetchJson(
+          "/api/emission-categories",
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(category),
           },
-          body: JSON.stringify(category),
-        });
-        const body = (await response.json()) as { error?: string };
-
-        if (!response.ok) {
-          throw new Error(body.error ?? "카테고리를 삭제할 수 없습니다.");
-        }
+          {
+            errorMessage: "카테고리를 삭제할 수 없습니다.",
+          },
+        );
 
         setMessage({
           type: "success",

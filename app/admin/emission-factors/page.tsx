@@ -11,6 +11,7 @@ import {
   SurfaceSection,
   TitleGroup,
 } from "@/components/common/styles";
+import { fetchJson } from "@/app/lib/api-client";
 import EmissionFactorModal, {
   type EmissionFactor,
   type FactorForm,
@@ -74,15 +75,11 @@ export default function EmissionFactorsPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/emission-factors");
-
-      if (!response.ok) {
-        throw new Error("Failed to load emission factors.");
-      }
-
-      const body = (await response.json()) as {
+      const body = await fetchJson<{
         factors?: EmissionFactor[];
-      };
+      }>("/api/emission-factors", undefined, {
+        errorMessage: LOAD_FACTORS_ERROR_MESSAGE,
+      });
 
       setFactors(body.factors ?? []);
     } catch (error) {
@@ -153,33 +150,33 @@ export default function EmissionFactorsPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/emission-factors", {
-        method: editingFactor ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: editingFactor?.id,
-          type,
-          description,
-          unit,
-          factorValue,
-          validFrom: form.validFrom,
-          validTo:
-            editingFactor && form.changeType === "revision"
-              ? undefined
-              : form.validTo || null,
-          changeType: editingFactor ? form.changeType : undefined,
-        }),
-      });
-      const body = (await response.json()) as {
-        error?: string;
+      const body = await fetchJson<{
         recalculatedActivities?: number;
-      };
-
-      if (!response.ok) {
-        throw new Error(body.error ?? "배출계수를 저장할 수 없습니다.");
-      }
+      }>(
+        "/api/emission-factors",
+        {
+          method: editingFactor ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: editingFactor?.id,
+            type,
+            description,
+            unit,
+            factorValue,
+            validFrom: form.validFrom,
+            validTo:
+              editingFactor && form.changeType === "revision"
+                ? undefined
+                : form.validTo || null,
+            changeType: editingFactor ? form.changeType : undefined,
+          }),
+        },
+        {
+          errorMessage: "배출계수를 저장할 수 없습니다.",
+        },
+      );
 
       setIsModalOpen(false);
       setEditingFactor(null);
